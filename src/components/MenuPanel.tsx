@@ -40,15 +40,48 @@ export function MenuPanel({
         >
           ⏱ Shadow Strike (Blind 10s)
         </button>
+        <button
+          type="button"
+          className={`tab-btn ${mode === "bakudan" ? "active" : ""}`}
+          aria-pressed={mode === "bakudan"}
+          onClick={() => onSelectMode("bakudan")}
+        >
+          💣 Bakudan (Hot Potato)
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${mode === "wabun" ? "active" : ""}`}
+          aria-pressed={mode === "wabun"}
+          onClick={() => onSelectMode("wabun")}
+        >
+          🍣 Wabun (Morse Race)
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${mode === "tsugitashi" ? "active" : ""}`}
+          aria-pressed={mode === "tsugitashi"}
+          onClick={() => onSelectMode("tsugitashi")}
+        >
+          ➕ Tsugitashi (Don't Go Over)
+        </button>
       </div>
 
       <div className="menu-interactive-section">
         <div className="rules-image-container">
-          <img
-            src={MODE_DETAILS[mode].rulesImage}
-            alt={`${MODE_DETAILS[mode].title} Rules`}
-            className="rules-image"
-          />
+          {MODE_DETAILS[mode].rulesImage ? (
+            <img
+              src={MODE_DETAILS[mode].rulesImage}
+              alt={`${MODE_DETAILS[mode].title} Rules`}
+              className="rules-image"
+            />
+          ) : (
+            <div className="rules-text">
+              <h2>{MODE_DETAILS[mode].title}</h2>
+              <ol>
+                {MODE_DETAILS[mode].rules?.map((rule) => <li key={rule}>{rule}</li>)}
+              </ol>
+            </div>
+          )}
           <img
             src={getRewardImageUrl(numPlayers)}
             alt="Battle Rewards"

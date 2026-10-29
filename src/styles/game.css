@@ -125,3 +125,21 @@
   text-shadow: 0 1px 4px #000;
   letter-spacing: 0.08em;
 }
+
+/* Bakudan's hidden fuse: it burns, but never shows how much is left */
+.timer-fill.fuse {
+  width: 100%;
+  background: repeating-linear-gradient(-45deg, #c8a165 0 10px, #8a6a3a 10px 20px);
+  box-shadow: none;
+  opacity: 0.5;
+}
+
+.timer-fill.fuse-lit {
+  opacity: 1;
+  box-shadow: 0 0 15px #ff822d;
+  animation: fuseBurn 0.6s linear infinite;
+}
+
+@keyframes fuseBurn {
+  to { background-position: 28px 0; }
+}

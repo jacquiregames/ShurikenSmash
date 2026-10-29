@@ -1,0 +1,117 @@
+/* ---------- Target ---------- */
+.tsugi-target {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 1.5vh;
+  padding: 0.5rem 2rem;
+  background: linear-gradient(160deg, rgba(25, 10, 30, 0.92), rgba(8, 4, 12, 0.95));
+  border: 2px solid #ffc93c;
+  border-radius: 8px;
+  box-shadow: 0 0 30px rgba(255, 201, 60, 0.35);
+  animation: panelIn 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+
+.tsugi-target-label {
+  font-family: "Bangers", cursive;
+  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  letter-spacing: 0.1em;
+  color: #ffc93c;
+}
+
+.tsugi-target-value {
+  font-family: "Bangers", cursive;
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(255, 201, 60, 0.8), 4px 4px 0 #000;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Player meter ---------- */
+.mode-tsugitashi .card-kanji {
+  display: none;
+}
+
+.tsugi-meter {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-bottom: 0.4rem;
+}
+
+.tsugi-value {
+  padding: 0.2rem 0.6rem;
+  background: rgba(5, 3, 10, 0.75);
+  border-radius: 8px;
+  font-family: "Bangers", cursive;
+  font-size: clamp(1.8rem, 3.6vw, 3.4rem);
+  line-height: 1.1;
+  letter-spacing: 0.03em;
+  color: #fff;
+  text-shadow: 0 0 16px var(--c), 3px 3px 0 #000;
+  font-variant-numeric: tabular-nums;
+}
+
+.tsugi-holding .tsugi-value {
+  animation: tsugiBuzz 0.08s linear infinite alternate;
+}
+
+@keyframes tsugiBuzz {
+  to { transform: translateY(-2px) scale(1.03); }
+}
+
+.tsugi-bar {
+  width: 85%;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.tsugi-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--c), #fff);
+  box-shadow: 0 0 10px var(--c);
+}
+
+.tsugi-status {
+  padding: 0.1rem 0.6rem;
+  background: rgba(5, 3, 10, 0.75);
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: clamp(0.9rem, 1.4vw, 1.2rem);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.tsugi-bust .tsugi-value,
+.tsugi-bust .tsugi-status {
+  color: #ff3b4e;
+  text-shadow: 0 0 15px rgba(255, 59, 78, 0.9), 3px 3px 0 #000;
+}
+
+.tsugi-bust .tsugi-fill {
+  background: #ff3b4e;
+  box-shadow: 0 0 14px #ff3b4e;
+}
+
+.tsugi-bust .tsugi-status {
+  font-family: "Bangers", cursive;
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+}
+
+.tsugi-exact .tsugi-status {
+  font-family: "Bangers", cursive;
+  font-size: clamp(1.4rem, 2.4vw, 2rem);
+  color: #2ee6a0;
+  text-shadow: 0 0 15px rgba(46, 230, 160, 0.9), 3px 3px 0 #000;
+}

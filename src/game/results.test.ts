@@ -56,3 +56,53 @@ describe("computeResults (blind)", () => {
     expect(r.winnerIds.size).toBe(0);
   });
 });
+describe("computeResults (bakudan)", () => {
+  it("ranks by how long each ninja survived", () => {
+    const r = computeResults({
+      mode: "bakudan",
+      players,
+      counts: [],
+      strikeTimes: [],
+      knockouts: [
+        { playerId: 2, round: 1, cause: "fumble" },
+        { playerId: 0, round: 1, cause: "boom" },
+        { playerId: 3, round: 2, cause: "boom" },
+      ],
+    });
+    expect([0, 1, 2, 3].map((i) => r.byPlayer[i].rank)).toEqual([3, 1, 4, 2]);
+    expect([...r.winnerIds]).toEqual([1]);
+    expect(r.byPlayer[2].scoreLabel).toBe("Fumbled · Round 1");
+  });
+});
+
+describe("computeResults (wabun)", () => {
+  it("crowns whoever spelled the word and ranks the rest by progress", () => {
+    const r = computeResults({ mode: "wabun", players, counts: [], strikeTimes: [], progress: [2, 4, 0, 2], wordLength: 4 });
+    expect([0, 1, 2, 3].map((i) => r.byPlayer[i].rank)).toEqual([2, 1, 4, 2]);
+    expect([...r.winnerIds]).toEqual([1]);
+    expect(r.byPlayer[0].scoreLabel).toBe("2 / 4 Sent");
+  });
+
+  it("has no winner when time runs out", () => {
+    const r = computeResults({ mode: "wabun", players, counts: [], strikeTimes: [], progress: [3, 1, 0, 0], wordLength: 4 });
+    expect(r.winnerIds.size).toBe(0);
+    expect(r.byPlayer[0].rankLabel).toBe("TIME UP");
+  });
+});
+
+describe("computeResults (tsugitashi)", () => {
+  const input = (counts: number[]) => ({ mode: "tsugitashi" as const, players, counts, strikeTimes: [], target: 1_500_000 });
+
+  it("ranks closest without going over, and busts anyone over", () => {
+    const r = computeResults(input([1_400_000, 1_500_001, 1_499_000, 900_000]));
+    expect([0, 1, 2, 3].map((i) => r.byPlayer[i].rank)).toEqual([2, null, 1, 3]);
+    expect([...r.winnerIds]).toEqual([2]);
+    expect(r.byPlayer[1].rankLabel).toBe("BUST");
+    expect(r.byPlayer[2].scoreLabel).toBe("1,000 short");
+  });
+
+  it("calls out an exact hit, and has no winner if everyone busts", () => {
+    expect(computeResults(input([1_500_000, 0, 0, 0])).byPlayer[0].scoreLabel).toBe("EXACT! 1,500,000");
+    expect(computeResults(input([2e6, 2e6, 2e6, 2e6])).winnerIds.size).toBe(0);
+  });
+});

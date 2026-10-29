@@ -1,22 +1,67 @@
 import { useMemo } from "react";
 import { MODE_DETAILS, getOutcomeVideoUrl, getImageUrl } from "./game/config";
 import { computeResults } from "./game/results";
+import { WORDS } from "./game/wabun";
 import { useGame } from "./hooks/useGame";
 import { Timer } from "./components/Timer";
 import { PlayerCard } from "./components/PlayerCard";
 import { MenuPanel } from "./components/MenuPanel";
+import { WabunChart } from "./components/WabunChart";
+import { WabunProgress } from "./components/WabunProgress";
+import { WordBanner } from "./components/WordBanner";
+import { TsugitashiMeter } from "./components/TsugitashiMeter";
+import { formatNumber } from "./game/tsugitashi";
 import "./App.css";
 
 export default function App() {
   const { state, clock, actions } = useGame();
-  const { phase, mode, numPlayers, ninjas, countdown, counts, strikeTimes, pulses, hits } = state;
+  const {
+    phase,
+    mode,
+    numPlayers,
+    ninjas,
+    countdown,
+    counts,
+    strikeTimes,
+    pulses,
+    hits,
+    round,
+    holder,
+    hitSeq,
+    knockouts,
+    alive,
+    wordIndex,
+    progress,
+    partials,
+    pressedAt,
+    mistakes,
+    target,
+    startedAt,
+    roundMs,
+  } = state;
+  const word = WORDS[wordIndex];
+  const { logoImage, title } = MODE_DETAILS[mode];
+  const lastKnockout = knockouts.at(-1);
 
   const players = useMemo(() => ninjas.slice(0, numPlayers), [ninjas, numPlayers]);
+  const isLastStanding = mode === "bakudan" && players.filter((p) => alive[p.id]).length === 1;
   const isRoundOver = phase === "video" || phase === "ended" || phase === "results";
 
   const results = useMemo(
-    () => (isRoundOver ? computeResults({ mode, players, counts, strikeTimes }) : null),
-    [isRoundOver, mode, players, counts, strikeTimes]
+    () =>
+      isRoundOver
+        ? computeResults({
+            mode,
+            players,
+            counts,
+            strikeTimes,
+            knockouts,
+            progress,
+            wordLength: word.codes.length,
+            target,
+          })
+        : null,
+    [isRoundOver, mode, players, counts, strikeTimes, knockouts, progress, word, target]
   );
 
   const activeCounts = counts.slice(0, numPlayers);
@@ -25,7 +70,7 @@ export default function App() {
   const leadersCount = activeCounts.filter((c) => c === topScore).length;
 
   return (
-    <div className={`game phase-${phase}`}>
+    <div className={`game phase-${phase} mode-${mode}`}>
       <div
         className="bg"
         aria-hidden="true"
@@ -33,11 +78,11 @@ export default function App() {
       />
 
       <header className="title-bar">
-        <img
-          src={MODE_DETAILS[mode].logoImage}
-          alt={MODE_DETAILS[mode].title}
-          className="header-logo"
-        />
+        {logoImage ? (
+          <img src={logoImage} alt={title} className="header-logo" />
+        ) : (
+          <h1 className="header-title">{title}</h1>
+        )}
       </header>
 
       {phase === "menu" && (
@@ -54,7 +99,21 @@ export default function App() {
 
       {phase !== "menu" && (
         <>
-          <Timer phase={phase} mode={mode} clock={clock} />
+          <Timer phase={phase} mode={mode} clock={clock} round={round} roundMs={roundMs} />
+
+          {mode === "tsugitashi" && phase !== "countdown" && (
+            <div className="tsugi-target">
+              <span className="tsugi-target-label">Target</span>
+              <span className="tsugi-target-value">{formatNumber(target)}</span>
+            </div>
+          )}
+
+          {mode === "wabun" && (phase === "playing" || phase === "countdown") && (
+            <div className="wabun-board">
+              {phase === "playing" && <WordBanner word={word} />}
+              <WabunChart />
+            </div>
+          )}
 
           <div className={`arena players-${numPlayers}`}>
             {players.map((p) => {
@@ -85,6 +144,31 @@ export default function App() {
                   hits={hits[p.id]}
                   lockedTime={strikeTimes[p.id]}
                   isLocked={isLocked}
+                  hasBomb={mode === "bakudan" && holder === p.id && !isLastStanding}
+                  isVictor={isLastStanding && alive[p.id]}
+                  bombKey={hitSeq}
+                  knockout={knockouts.find((k) => k.playerId === p.id)}
+                  isExploding={phase === "boom" && lastKnockout?.playerId === p.id}
+                  playArea={
+                    mode === "tsugitashi" && phase !== "countdown" ? (
+                      <TsugitashiMeter
+                        banked={counts[p.id]}
+                        target={target}
+                        pressedAt={phase === "playing" ? pressedAt[p.id] : undefined}
+                        clock={clock}
+                        startedAt={startedAt}
+                        roundMs={roundMs}
+                      />
+                    ) : mode === "wabun" && phase !== "countdown" ? (
+                      <WabunProgress
+                        word={word}
+                        sent={progress[p.id]}
+                        partial={partials[p.id]}
+                        pressedAt={pressedAt[p.id]}
+                        mistakes={mistakes[p.id]}
+                      />
+                    ) : undefined
+                  }
                   outcome={outcome}
                   videoUrl={videoUrl}
                   result={phase === "results" ? results?.byPlayer[p.id] : undefined}
