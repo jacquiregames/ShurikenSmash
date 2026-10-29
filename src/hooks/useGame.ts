@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
 import {
+  DEADLINE_GRACE_MS,
   ENDED_HOLD_MS,
   GAME_MS,
   VIDEO_FALLBACK_MS,
@@ -117,9 +118,11 @@ export function useGame() {
     if (phase !== "playing" || startedAt === null) return;
     let raf = 0;
     const tick = (now: number) => {
-      const left = Math.min(GAME_MS, Math.max(0, GAME_MS - (now - startedAt)));
-      clock.set(left);
-      if (left === 0) {
+      const elapsed = now - startedAt;
+      clock.set(Math.min(GAME_MS, Math.max(0, GAME_MS - elapsed)));
+      // Key events reach the page a few ms after their timestamp; the reducer rejects
+      // anything stamped at/after GAME_MS, so the grace window only admits on-time presses.
+      if (elapsed >= GAME_MS + DEADLINE_GRACE_MS) {
         dispatch({ type: "time_up" });
         return;
       }

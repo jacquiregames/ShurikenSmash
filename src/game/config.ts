@@ -52,6 +52,8 @@ export const VIDEO_FALLBACK_MS = 12_000;
 export const ENDED_HOLD_MS = 2000;
 /** Ignore keyboard "confirm" presses right after results appear (mashing guard). */
 export const RESULTS_INPUT_LOCK_MS = 1_000;
+/** Keep the round open briefly after time-up so in-flight presses stamped before the deadline still land. */
+export const DEADLINE_GRACE_MS = 100;
 
 /* ---------- Players ---------- */
 export const MAX_PLAYERS = 4;

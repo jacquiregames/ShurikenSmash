@@ -36,6 +36,16 @@ describe("mash", () => {
     expect(s.counts[0]).toBe(0);
   });
 
+  it("ignores presses stamped before play began", () => {
+    const s = run(playing(), { type: "key_down", code: "KeyA", at: 999.5 });
+    expect(s.counts[0]).toBe(0);
+  });
+
+  it("counts a press stamped just before the deadline", () => {
+    const s = run(playing(), { type: "key_down", code: "KeyA", at: 1000 + GAME_MS - 0.1 });
+    expect(s.counts[0]).toBe(1);
+  });
+
   it("ignores the 4th player's key in a 3-player game", () => {
     let s = createInitialState();
     s = run(s, { type: "select_player_count", count: 3 }, { type: "start" });
@@ -53,6 +63,25 @@ describe("blind", () => {
       { type: "key_down", code: "KeyA", at: 1000 + 9_500 }
     );
     expect(s.strikeTimes[0]).toBeCloseTo(1, 5);
+  });
+
+  it("rounds strike times to whole milliseconds", () => {
+    const s = run(
+      playing("blind"),
+      { type: "key_down", code: "KeyA", at: 1000 + 9_957.7 },
+      { type: "key_down", code: "KeyF", at: 1000 + 9_958.2 }
+    );
+    expect(s.strikeTimes[0]).toBe(0.042);
+    expect(s.strikeTimes[1]).toBe(0.042);
+  });
+
+  it("does not spend a player's one strike on a press stamped before play began", () => {
+    const s = run(
+      playing("blind"),
+      { type: "key_down", code: "KeyA", at: 999 },
+      { type: "key_down", code: "KeyA", at: 1000 + 9_000 }
+    );
+    expect(s.strikeTimes[0]).toBe(1);
   });
 
   it("ends the round once every active player has struck", () => {

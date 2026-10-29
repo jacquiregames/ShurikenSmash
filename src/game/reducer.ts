@@ -117,7 +117,8 @@ function strike(state: GameState, code: string, at: number): GameState {
   const player = players.find((n) => n.code === code);
   if (!player) return state;
 
-  const elapsed = Math.max(0, at - state.startedAt);
+  if (at < state.startedAt) return state;
+  const elapsed = at - state.startedAt;
   if (elapsed >= GAME_MS) return state;
 
   const id = player.id;
@@ -138,7 +139,8 @@ function strike(state: GameState, code: string, at: number): GameState {
     return { ...next, counts: replaceAt(state.counts, id, (n) => n + 1) };
   }
 
-  const strikeTimes = replaceAt(state.strikeTimes, id, () => (GAME_MS - elapsed) / 1000);
+  // Whole milliseconds, so ranking agrees with the 3-decimal display; sub-ms differences are noise.
+  const strikeTimes = replaceAt(state.strikeTimes, id, () => Math.round(GAME_MS - elapsed) / 1000);
   const updated = { ...next, strikeTimes };
   return players.every((p) => strikeTimes[p.id] !== undefined) ? endRound(updated) : updated;
 }
