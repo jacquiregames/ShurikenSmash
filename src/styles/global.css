@@ -73,3 +73,24 @@ body {
   background-position: center;
   background-repeat: no-repeat;
 }
+
+
+/* Text title for modes without a logo image */
+.header-title {
+  font-family: "Bangers", cursive;
+  font-size: clamp(3rem, 9vw, 7rem);
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 25px rgba(255, 120, 20, 0.7), 5px 5px 0 #6a0010;
+  transition: font-size 0.3s cubic-bezier(0.2, 1, 0.3, 1);
+}
+
+.phase-countdown .header-title,
+.phase-playing .header-title,
+.phase-boom .header-title,
+.phase-video .header-title,
+.phase-ended .header-title,
+.phase-results .header-title {
+  font-size: clamp(2rem, 5vh, 3rem);
+}

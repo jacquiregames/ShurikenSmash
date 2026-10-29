@@ -9,14 +9,32 @@ import "./App.css";
 
 export default function App() {
   const { state, clock, actions } = useGame();
-  const { phase, mode, numPlayers, ninjas, countdown, counts, strikeTimes, pulses, hits } = state;
+  const {
+    phase,
+    mode,
+    numPlayers,
+    ninjas,
+    countdown,
+    counts,
+    strikeTimes,
+    pulses,
+    hits,
+    round,
+    holder,
+    hitSeq,
+    knockouts,
+    alive,
+  } = state;
+  const { logoImage, title } = MODE_DETAILS[mode];
+  const lastKnockout = knockouts.at(-1);
 
   const players = useMemo(() => ninjas.slice(0, numPlayers), [ninjas, numPlayers]);
+  const isLastStanding = mode === "bakudan" && players.filter((p) => alive[p.id]).length === 1;
   const isRoundOver = phase === "video" || phase === "ended" || phase === "results";
 
   const results = useMemo(
-    () => (isRoundOver ? computeResults({ mode, players, counts, strikeTimes }) : null),
-    [isRoundOver, mode, players, counts, strikeTimes]
+    () => (isRoundOver ? computeResults({ mode, players, counts, strikeTimes, knockouts }) : null),
+    [isRoundOver, mode, players, counts, strikeTimes, knockouts]
   );
 
   const activeCounts = counts.slice(0, numPlayers);
@@ -33,11 +51,11 @@ export default function App() {
       />
 
       <header className="title-bar">
-        <img
-          src={MODE_DETAILS[mode].logoImage}
-          alt={MODE_DETAILS[mode].title}
-          className="header-logo"
-        />
+        {logoImage ? (
+          <img src={logoImage} alt={title} className="header-logo" />
+        ) : (
+          <h1 className="header-title">{title}</h1>
+        )}
       </header>
 
       {phase === "menu" && (
@@ -54,7 +72,7 @@ export default function App() {
 
       {phase !== "menu" && (
         <>
-          <Timer phase={phase} mode={mode} clock={clock} />
+          <Timer phase={phase} mode={mode} clock={clock} round={round} />
 
           <div className={`arena players-${numPlayers}`}>
             {players.map((p) => {
@@ -85,6 +103,11 @@ export default function App() {
                   hits={hits[p.id]}
                   lockedTime={strikeTimes[p.id]}
                   isLocked={isLocked}
+                  hasBomb={mode === "bakudan" && holder === p.id && !isLastStanding}
+                  isVictor={isLastStanding && alive[p.id]}
+                  bombKey={hitSeq}
+                  knockout={knockouts.find((k) => k.playerId === p.id)}
+                  isExploding={phase === "boom" && lastKnockout?.playerId === p.id}
                   outcome={outcome}
                   videoUrl={videoUrl}
                   result={phase === "results" ? results?.byPlayer[p.id] : undefined}

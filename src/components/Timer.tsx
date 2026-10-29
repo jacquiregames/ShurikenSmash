@@ -6,12 +6,25 @@ interface TimerProps {
   phase: Phase;
   mode: GameMode;
   clock: Clock;
+  /** Bakudan round number; the fuse length itself is never shown. */
+  round: number;
 }
 
 const formatSeconds = (ms: number) => (ms / 1000).toFixed(2);
 
-export const Timer = memo(function Timer({ phase, mode, clock }: TimerProps) {
+export const Timer = memo(function Timer({ phase, mode, clock, round }: TimerProps) {
   const timeLeft = useSyncExternalStore(clock.subscribe, clock.getSnapshot);
+
+  if (mode === "bakudan") {
+    return (
+      <div className="timer-wrap">
+        <div className="timer-text">ROUND {round}</div>
+        <div className="timer-bar">
+          <div className={`timer-fill fuse ${phase === "playing" ? "fuse-lit" : ""}`} />
+        </div>
+      </div>
+    );
+  }
 
   const isPlaying = phase === "playing";
   const isBlindHidden = mode === "blind" && isPlaying && timeLeft <= BLIND_THRESHOLD_MS;

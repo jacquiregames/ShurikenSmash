@@ -1,5 +1,22 @@
-import { COUNTDOWN_START, GAME_MS, MAX_PLAYERS, MAX_VISIBLE_HITS, RESULTS_INPUT_LOCK_MS } from "./config";
-import type { GameMode, Hit, Ninja, NinjaColor, Phase, PlayerCount } from "./types";
+import {
+  BAKUDAN_MAX_MS,
+  BAKUDAN_MIN_MS,
+  COUNTDOWN_START,
+  GAME_MS,
+  MAX_PLAYERS,
+  MAX_VISIBLE_HITS,
+  RESULTS_INPUT_LOCK_MS,
+} from "./config";
+import type {
+  GameMode,
+  Hit,
+  Knockout,
+  KnockoutCause,
+  Ninja,
+  NinjaColor,
+  Phase,
+  PlayerCount,
+} from "./types";
 import { assignColor, DEFAULT_NINJAS } from "./ninjas";
 
 function unit(seed: number): number {
@@ -32,6 +49,16 @@ export interface GameState {
   hitSeq: number;
   videosDone: boolean[];
   resultsShownAt: number;
+  /** Length of the current round; random and hidden in Bakudan. */
+  roundMs: number;
+  /** Bakudan: 1-based round number within the match. */
+  round: number;
+  /** Bakudan: players still in the match. */
+  alive: boolean[];
+  /** Bakudan: id of the player holding the bomb, while a round is live. */
+  holder: number | null;
+  /** Bakudan: eliminations in the order they happened. */
+  knockouts: Knockout[];
 }
 
 export type GameAction =
@@ -42,6 +69,7 @@ export type GameAction =
   | { type: "countdown_tick" }
   | { type: "begin_play"; at: number }
   | { type: "time_up" }
+  | { type: "next_round" }
   | { type: "video_ended"; playerId: number }
   | { type: "video_timeout" }
   | { type: "show_results"; at: number }
@@ -68,6 +96,11 @@ function roundState() {
     hits: Array.from({ length: MAX_PLAYERS }, (): Hit[] => []),
     videosDone: filled(false),
     resultsShownAt: 0,
+    roundMs: GAME_MS,
+    round: 1,
+    alive: filled(true),
+    holder: null,
+    knockouts: [],
   };
 }
 
@@ -99,6 +132,77 @@ function endRound(state: GameState): GameState {
   };
 }
 
+function beginPlay(state: GameState, at: number): GameState {
+  const next: GameState = { ...state, phase: "playing", startedAt: at };
+  if (state.mode !== "bakudan") return next;
+
+  // The start timestamp is effectively random, so it seeds the hidden fuse length and
+  // the starting holder while keeping the reducer pure and testable.
+  const seed = (Math.floor(at * 1000) ^ Math.imul(state.round, 0x9e3779b1)) | 0;
+  const ids = aliveIds(state);
+  return {
+    ...next,
+    roundMs: BAKUDAN_MIN_MS + Math.floor(unit(seed) * (BAKUDAN_MAX_MS - BAKUDAN_MIN_MS)),
+    holder: ids[Math.floor(unit(seed + 1) * ids.length)],
+  };
+}
+
+function aliveIds(state: GameState): number[] {
+  return state.ninjas
+    .slice(0, state.numPlayers)
+    .filter((n) => state.alive[n.id])
+    .map((n) => n.id);
+}
+
+function nextAlive(state: GameState, fromId: number): number {
+  for (let step = 1; step <= state.numPlayers; step++) {
+    const id = (fromId + step) % state.numPlayers;
+    if (state.alive[id]) return id;
+  }
+  return fromId;
+}
+
+function knockOut(state: GameState, playerId: number, cause: KnockoutCause): GameState {
+  return {
+    ...state,
+    alive: replaceAt(state.alive, playerId, () => false),
+    knockouts: [...state.knockouts, { playerId, round: state.round, cause }],
+  };
+}
+
+function nextRound(state: GameState): GameState {
+  if (aliveIds(state).length <= 1) return endRound(state);
+  return {
+    ...state,
+    phase: "countdown",
+    countdown: COUNTDOWN_START,
+    startedAt: null,
+    holder: null,
+    round: state.round + 1,
+  };
+}
+
+function passBomb(state: GameState, id: number): GameState {
+  if (!state.alive[id]) return state;
+
+  if (id !== state.holder) {
+    const updated = knockOut(state, id, "fumble");
+    return aliveIds(updated).length <= 1 ? { ...updated, phase: "boom" } : updated;
+  }
+
+  const hitSeq = state.hitSeq + 1;
+  return {
+    ...state,
+    hitSeq,
+    holder: nextAlive(state, id),
+    pulses: replaceAt(state.pulses, id, (n) => n + 1),
+    hits: replaceAt(state.hits, id, (list) => [
+      ...list.slice(-(MAX_VISIBLE_HITS - 1)),
+      createHit(hitSeq),
+    ]),
+  };
+}
+
 function strike(state: GameState, code: string, at: number): GameState {
   if (state.startedAt === null) return state;
 
@@ -107,7 +211,9 @@ function strike(state: GameState, code: string, at: number): GameState {
   if (!player) return state;
 
   const elapsed = Math.max(0, at - state.startedAt);
-  if (elapsed >= GAME_MS) return state;
+  if (elapsed >= state.roundMs) return state;
+
+  if (state.mode === "bakudan") return passBomb(state, player.id);
 
   const id = player.id;
   if (state.mode === "blind" && state.strikeTimes[id] !== undefined) return state;
@@ -172,10 +278,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         : state;
     case "begin_play":
       return state.phase === "countdown" && state.countdown === 0
-        ? { ...state, phase: "playing", startedAt: action.at }
+        ? beginPlay(state, action.at)
         : state;
     case "time_up":
-      return state.phase === "playing" ? endRound(state) : state;
+      if (state.phase !== "playing") return state;
+      if (state.mode !== "bakudan") return endRound(state);
+      return state.holder === null
+        ? nextRound(state)
+        : { ...knockOut(state, state.holder, "boom"), phase: "boom", holder: null };
+    case "next_round":
+      return state.phase === "boom" ? nextRound(state) : state;
     case "video_ended": {
       if (state.phase !== "video") return state;
       const videosDone = replaceAt(state.videosDone, action.playerId, () => true);

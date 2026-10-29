@@ -357,3 +357,23 @@ button:focus-visible {
   outline: 3px solid #ffc93c;
   outline-offset: 3px;
 }
+/* Text rules for modes without a rules image */
+.rules-text {
+  max-width: calc(63% - 0.5rem);
+  text-align: left;
+}
+
+.rules-text h2 {
+  font-family: "Bangers", cursive;
+  font-size: 2rem;
+  letter-spacing: 0.06em;
+  color: #ff3b4e;
+  margin-bottom: 0.5rem;
+}
+
+.rules-text ol {
+  padding-left: 1.4rem;
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  font-weight: 700;
+  line-height: 1.4;
+}

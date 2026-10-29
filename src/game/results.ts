@@ -1,11 +1,13 @@
 import { getBonusImageUrl, getRankImageUrl } from "./config";
-import type { BonusTier, GameMode, Ninja, PlayerResultInfo } from "./types";
+import type { BonusTier, GameMode, Knockout, Ninja, PlayerResultInfo } from "./types";
 
 export interface RoundInput {
   mode: GameMode;
   players: readonly Ninja[];
   counts: readonly number[];
   strikeTimes: readonly (number | undefined)[];
+  /** Bakudan elimination order; everyone not listed is still standing. */
+  knockouts?: readonly Knockout[];
 }
 
 export interface RoundResults {
@@ -51,6 +53,7 @@ export function computeResults({
   players,
   counts,
   strikeTimes,
+  knockouts = [],
 }: RoundInput): RoundResults {
   const byPlayer: Record<number, PlayerResultInfo> = {};
   const winnerIds = new Set<number>();
@@ -69,6 +72,22 @@ export function computeResults({
       const rank = competitionRank(entries, entry, (a, b) => a.score > b.score);
       byPlayer[entry.id] = placed(rank, label, playerCount);
       if (rank === 1) winnerIds.add(entry.id);
+    }
+    return { winnerIds, byPlayer };
+  }
+
+  if (mode === "bakudan") {
+    // Later eliminations place higher; survivors share 1st.
+    for (const p of players) {
+      const index = knockouts.findIndex((k) => k.playerId === p.id);
+      if (index === -1) {
+        byPlayer[p.id] = placed(1, "Last Ninja Standing", playerCount);
+        winnerIds.add(p.id);
+        continue;
+      }
+      const { cause, round } = knockouts[index];
+      const label = `${cause === "boom" ? "Blown Up" : "Fumbled"} · Round ${round}`;
+      byPlayer[p.id] = placed(playerCount - index, label, playerCount);
     }
     return { winnerIds, byPlayer };
   }

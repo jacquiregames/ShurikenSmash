@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { GAME_MS, RESULTS_INPUT_LOCK_MS } from "./config";
+import { BAKUDAN_MAX_MS, BAKUDAN_MIN_MS, GAME_MS, RESULTS_INPUT_LOCK_MS } from "./config";
+import type { GameMode } from "./types";
 import { assignColor, DEFAULT_NINJAS } from "./ninjas";
 import { createInitialState, gameReducer, type GameAction, type GameState } from "./reducer";
 
 const run = (state: GameState, ...actions: GameAction[]) => actions.reduce(gameReducer, state);
 
-function playing(mode: "mash" | "blind" = "mash", startedAt = 1000): GameState {
+function playing(mode: GameMode = "mash", startedAt = 1000): GameState {
   let s = createInitialState();
   s = run(s, { type: "select_mode", mode }, { type: "start" });
   s = run(s, { type: "countdown_tick" }, { type: "countdown_tick" }, { type: "countdown_tick" });
@@ -101,5 +102,63 @@ describe("assignColor", () => {
     expect(next[0].colorName).toBe("green");
     expect(next[1].colorName).toBe("red");
     expect(new Set(next.map((n) => n.colorName)).size).toBe(4);
+  });
+});
+describe("bakudan", () => {
+  const CODES = ["KeyA", "KeyF", "KeyH", "KeyL"];
+  const press = (s: GameState, id: number, at = (s.startedAt ?? 0) + 100) =>
+    run(s, { type: "key_down", code: CODES[id], at });
+
+  it("lights a hidden 10–20s fuse and hands the bomb to someone", () => {
+    for (const at of [0, 1234.5, 98765.4321]) {
+      const s = playing("bakudan", at);
+      expect(s.roundMs).toBeGreaterThanOrEqual(BAKUDAN_MIN_MS);
+      expect(s.roundMs).toBeLessThan(BAKUDAN_MAX_MS);
+      expect(s.holder).not.toBeNull();
+    }
+  });
+
+  it("passes the bomb around the loop, wrapping to the first player", () => {
+    let s: GameState = { ...playing("bakudan"), holder: 2 };
+    s = press(s, 2);
+    expect(s.holder).toBe(3);
+    s = press(s, 3);
+    expect(s.holder).toBe(0);
+  });
+
+  it("eliminates a player who presses without the bomb, and skips them afterwards", () => {
+    let s: GameState = { ...playing("bakudan"), holder: 0 };
+    s = press(s, 1);
+    expect(s.alive[1]).toBe(false);
+    expect(s.knockouts).toEqual([{ playerId: 1, round: 1, cause: "fumble" }]);
+    expect(s.phase).toBe("playing");
+    s = press(s, 0);
+    expect(s.holder).toBe(2);
+    expect(press(s, 1)).toBe(s);
+  });
+
+  it("blows up the holder when time runs out, then plays another round", () => {
+    let s: GameState = { ...playing("bakudan"), holder: 3 };
+    s = run(s, { type: "time_up" });
+    expect(s.phase).toBe("boom");
+    expect(s.alive[3]).toBe(false);
+    expect(s.knockouts.at(-1)).toEqual({ playerId: 3, round: 1, cause: "boom" });
+
+    s = run(s, { type: "next_round" });
+    expect(s.phase).toBe("countdown");
+    expect(s.round).toBe(2);
+    s = run(s, { type: "countdown_tick" }, { type: "countdown_tick" }, { type: "countdown_tick" });
+    s = run(s, { type: "begin_play", at: 50_000 });
+    expect(s.holder).not.toBe(3);
+  });
+
+  it("ends the match when one ninja is left", () => {
+    let s: GameState = { ...playing("bakudan"), holder: 0 };
+    s = press(s, 1);
+    s = press(s, 2);
+    s = press(s, 3);
+    expect(s.phase).toBe("boom");
+    s = run(s, { type: "next_round" });
+    expect(s.phase).toBe("video");
   });
 });

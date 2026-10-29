@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useReducer, useState } from "react";
+import { createMusicPlayer } from "../audio/chiptune";
 import {
+  BOOM_HOLD_MS,
   COUNTDOWN_GO_MS,
   ENDED_HOLD_MS,
   GAME_MS,
@@ -39,7 +41,9 @@ function isKeyboardFocusedControl(target: EventTarget | null): boolean {
 export function useGame() {
   const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
   const [clock] = useState(() => createClock(GAME_MS));
-  const { phase, countdown, startedAt, ninjas, numPlayers } = state;
+  const [music] = useState(() => createMusicPlayer());
+  const { phase, mode, countdown, startedAt, roundMs, ninjas, numPlayers, knockouts } = state;
+  const lastKnockout = knockouts.at(-1);
 
   const actions = useMemo(
     () => ({
@@ -116,7 +120,7 @@ export function useGame() {
     if (phase !== "playing" || startedAt === null) return;
     let raf = 0;
     const tick = (now: number) => {
-      const left = Math.min(GAME_MS, Math.max(0, GAME_MS - (now - startedAt)));
+      const left = Math.min(roundMs, Math.max(0, roundMs - (now - startedAt)));
       clock.set(left);
       if (left === 0) {
         dispatch({ type: "time_up" });
@@ -126,7 +130,28 @@ export function useGame() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [phase, startedAt, clock]);
+  }, [phase, startedAt, roundMs, clock]);
+
+  // Bakudan music: plays for the whole round and cuts off the instant the round ends.
+  useEffect(() => {
+    if (phase !== "playing" || mode !== "bakudan") return;
+    music.start();
+    return () => music.stop();
+  }, [phase, mode, music]);
+
+  // Knockout sound effects: explosion when the bomb goes off, a fail buzz on a fumble
+  useEffect(() => {
+    if (!lastKnockout) return;
+    if (lastKnockout.cause === "boom") music.boom();
+    else music.fumble();
+  }, [lastKnockout, music]);
+
+  // Show the elimination, then move on to the next round (or the finale)
+  useEffect(() => {
+    if (phase !== "boom") return;
+    const id = window.setTimeout(() => dispatch({ type: "next_round" }), BOOM_HOLD_MS);
+    return () => window.clearTimeout(id);
+  }, [phase]);
 
   // Video fallback safety timer
   useEffect(() => {
