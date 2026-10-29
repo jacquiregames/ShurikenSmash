@@ -399,6 +399,96 @@
   letter-spacing: 0.08em;
 }
 
+/* ---------- Bakudan ---------- */
+.bomb {
+  width: clamp(130px, 18vw, 210px);
+  height: clamp(130px, 18vw, 210px);
+  overflow: visible;
+  filter: drop-shadow(0 0 18px var(--g)) drop-shadow(0 8px 16px rgba(0, 0, 0, 0.7));
+  animation: bombCatch 0.3s cubic-bezier(0.18, 1.4, 0.4, 1), bombShake 0.25s 0.3s ease-in-out infinite alternate;
+}
+
+@keyframes bombCatch {
+  from { transform: translateX(-60%) scale(0.5) rotate(-40deg); opacity: 0; }
+}
+
+@keyframes bombShake {
+  from { transform: rotate(-4deg); }
+  to { transform: rotate(4deg) scale(1.03); }
+}
+
+.bomb-spark {
+  animation: spark 0.12s steps(2) infinite;
+}
+
+@keyframes spark {
+  50% { opacity: 0.4; transform: translate(30px, -66px) scale(1.3); }
+}
+
+.card-holding {
+  border-color: #ff3b4e;
+  box-shadow: 0 0 45px rgba(255, 59, 78, 0.75), inset 0 0 40px rgba(255, 59, 78, 0.2);
+  animation: cardIn 0.5s both, holdingPulse 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes holdingPulse {
+  to { box-shadow: 0 0 70px rgba(255, 59, 78, 0.95), inset 0 0 50px rgba(255, 59, 78, 0.35); }
+}
+
+.card-out {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+}
+
+.card-out .card-bg-image {
+  filter: grayscale(1) brightness(0.45);
+}
+
+.card-ko-boom {
+  animation: koShake 0.5s ease-out;
+}
+
+@keyframes koShake {
+  0%, 100% { transform: translate(0, 0); }
+  20% { transform: translate(-10px, 6px) rotate(-2deg); }
+  40% { transform: translate(9px, -6px) rotate(2deg); }
+  60% { transform: translate(-6px, 4px); }
+  80% { transform: translate(4px, -2px); }
+}
+
+.boom-burst {
+  position: absolute;
+  width: 60%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 0%, #ffc93c 30%, #ff3b4e 60%, transparent 72%);
+  animation: burst 0.8s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes burst {
+  from { transform: scale(0.2); opacity: 1; }
+  to { transform: scale(2.6); opacity: 0; }
+}
+
+.out-badge {
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  color: #ff3b4e;
+  text-shadow: 0 0 15px rgba(255, 59, 78, 0.9), 3px 3px 0 #000;
+}
+
+.victory-badge {
+  font-size: clamp(1.6rem, 3vw, 2.6rem);
+  color: #2ee6a0;
+  text-shadow: 0 0 15px rgba(46, 230, 160, 0.9), 3px 3px 0 #000;
+}
+
+.holding-badge {
+  font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+  color: #ffc93c;
+  text-shadow: 0 0 15px rgba(255, 201, 60, 0.9), 3px 3px 0 #000;
+}
+
 @media (max-width: 800px) {
   .arena {
     gap: 0.8vw;

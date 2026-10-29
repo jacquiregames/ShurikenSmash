@@ -1,6 +1,7 @@
-import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
+import { memo, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { getOutcomeImageUrl } from "../game/config";
-import type { Ninja, Hit, GameMode, Outcome, PlayerResultInfo } from "../game/types";
+import type { Ninja, Hit, GameMode, Knockout, Outcome, PlayerResultInfo } from "../game/types";
+import { Bomb } from "./Bomb";
 import { Shuriken } from "./Shuriken";
 
 interface PlayerCardProps {
@@ -13,6 +14,18 @@ interface PlayerCardProps {
   hits: readonly Hit[];
   lockedTime?: number;
   isLocked: boolean;
+  /** Bakudan: holding the bomb right now. */
+  hasBomb?: boolean;
+  /** Bakudan: changes whenever the bomb moves, replaying its arrival animation. */
+  bombKey?: number;
+  /** Bakudan: set once this player is eliminated. */
+  knockout?: Knockout;
+  /** Bakudan: this player was just eliminated and the round is paused on it. */
+  isExploding?: boolean;
+  /** Bakudan: the last ninja standing. */
+  isVictor?: boolean;
+  /** Mode-specific play area that replaces the shuriken and score (used by Wabun). */
+  playArea?: ReactNode;
   outcome?: Outcome;
   videoUrl?: string;
   result?: PlayerResultInfo;
@@ -30,6 +43,12 @@ export const PlayerCard = memo(function PlayerCard({
   hits,
   lockedTime,
   isLocked,
+  hasBomb = false,
+  bombKey,
+  knockout,
+  isExploding = false,
+  isVictor = false,
+  playArea,
   outcome,
   videoUrl,
   result,
@@ -58,10 +77,14 @@ export const PlayerCard = memo(function PlayerCard({
   };
 
   const bgImage = outcome ? getOutcomeImageUrl(player.colorName, outcome) : player.bgImage;
+  const isOut = knockout !== undefined;
+  const hitLabel = mode === "blind" ? "LOCKED" : mode === "bakudan" ? "PASS!" : "+1";
 
   return (
     <div
       className={`card ${isLeading ? "leading" : ""} ${isLocked ? "card-locked" : ""} ${
+        hasBomb ? "card-holding" : ""
+      } ${isOut && !outcome ? "card-out" : ""} ${isExploding ? `card-ko-${knockout?.cause}` : ""} ${
         outcome ? `outcome-${outcome}` : ""
       } ${activeVideoUrl ? "has-video" : ""}`}
       style={{ "--c": player.color, "--g": player.glow } as CSSProperties}
@@ -99,15 +122,22 @@ export const PlayerCard = memo(function PlayerCard({
             <img src={result.bonusImage} alt="" className="card-bonus-img" />
           )}
         </div>
-      ) : activeVideoUrl ? null : (
+      ) : activeVideoUrl ? null : playArea ? (
+        playArea
+      ) : (
         <>
           <div className="shuriken-zone">
-            <Shuriken pulseId={pulseId} />
+            {mode !== "bakudan" ? (
+              <Shuriken pulseId={pulseId} />
+            ) : hasBomb ? (
+              <Bomb key={bombKey} />
+            ) : null}
+            {isExploding && knockout?.cause === "boom" && <div className="boom-burst" />}
             {hits.map((h) => (
               <div key={h.id} className="hit" style={{ left: `${h.x}%`, top: `${h.y}%` }}>
                 <div className="slash" style={{ transform: `rotate(${h.rot}deg)` }} />
                 <span className="plus" onAnimationEnd={() => onHitDone(player.id, h.id)}>
-                  {mode === "blind" ? "LOCKED" : "+1"}
+                  {hitLabel}
                 </span>
               </div>
             ))}
@@ -116,6 +146,16 @@ export const PlayerCard = memo(function PlayerCard({
           <div className="count" key={`c${count}`}>
             {mode === "mash" ? (
               count
+            ) : mode === "bakudan" ? (
+              isOut ? (
+                <span className="out-badge">{knockout?.cause === "boom" ? "BOOM!" : "FUMBLE!"}</span>
+              ) : isVictor ? (
+                <span className="victory-badge">VICTORY!</span>
+              ) : hasBomb ? (
+                <span className="holding-badge">PASS IT!</span>
+              ) : (
+                <span className="waiting-badge">READY</span>
+              )
             ) : isLocked ? (
               <span className="locked-badge">LOCKED IN</span>
             ) : (
@@ -136,7 +176,7 @@ export const PlayerCard = memo(function PlayerCard({
       )}
 
       {!activeVideoUrl && !result && (
-        <kbd className={`big-key ${isLocked ? "key-disabled" : ""}`}>{player.key}</kbd>
+        <kbd className={`big-key ${isLocked || isOut ? "key-disabled" : ""}`}>{player.key}</kbd>
       )}
     </div>
   );
