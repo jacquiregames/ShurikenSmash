@@ -57,6 +57,11 @@ export const RESULTS_INPUT_LOCK_MS = 1_000;
 export const MAX_PLAYERS = 4;
 export const PLAYER_COUNTS: readonly PlayerCount[] = [3, 4];
 export const MAX_VISIBLE_HITS = 8;
+/**
+ * Gamepad button index -> player id, for arcade buttons on a USB encoder board.
+ * Reorder to match how the buttons are wired (check indices in DevTools via `navigator.getGamepads()`).
+ */
+export const GAMEPAD_BUTTON_PLAYERS: readonly number[] = [0, 1, 2, 3];
 
 /* ---------- Asset URLs ---------- */
 const base = import.meta.env.BASE_URL;
