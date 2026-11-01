@@ -1,7 +1,22 @@
 import { describe, expect, it } from "vitest";
-import { RESULTS_INPUT_LOCK_MS, ROUND_MS, usesOutcomeMedia } from "./config";
+import {
+  COUNTDOWN_START,
+  RESULTS_INPUT_LOCK_MS,
+  ROUND_MS,
+  TSUGITASHI_MAX_TARGET,
+  TSUGITASHI_MIN_TARGET,
+  usesOutcomeMedia,
+} from "./config";
 import { assignColor, DEFAULT_NINJAS } from "./ninjas";
-import { createInitialState, gameReducer, nextStackDue, type GameAction, type GameState } from "./reducer";
+import {
+  createInitialState,
+  gameReducer,
+  nextStackDue,
+  roundDuration,
+  type GameAction,
+  type GameState,
+} from "./reducer";
+import { bustMs, counterAt } from "./tsugitashi";
 import type { GameMode } from "./types";
 
 const run = (state: GameState, ...actions: GameAction[]) => actions.reduce(gameReducer, state);
@@ -238,5 +253,74 @@ describe("shinobi stack", () => {
       expect(nextStackDue(next)).toBeGreaterThan(due!);
       s = next;
     }
+  });
+});
+
+describe("tsugitashi", () => {
+  const CODES = ["KeyA", "KeyF", "KeyH", "KeyL"];
+  const down = (id: number, at = 0): GameAction => ({ type: "key_down", code: CODES[id], at });
+  const up = (id: number, at: number): GameAction => ({ type: "key_up", code: CODES[id], at });
+  const tick: GameAction = { type: "countdown_tick" };
+
+  function armed(): GameState {
+    const s = run(createInitialState(), { type: "select_mode", mode: "tsugitashi" }, { type: "start" });
+    return run(s, down(0), down(1), down(2), down(3));
+  }
+
+  function playing(startedAt = 1000, random = 0.5): GameState {
+    return run(armed(), tick, tick, tick, { type: "begin_play", at: startedAt, random });
+  }
+
+  it("holds the countdown until every ninja is holding their button", () => {
+    let s = run(createInitialState(), { type: "select_mode", mode: "tsugitashi" }, { type: "start" });
+    s = run(s, down(0), down(1), down(2), tick);
+    expect(s.countdown).toBe(COUNTDOWN_START);
+    s = run(s, down(3), tick);
+    expect(s.countdown).toBe(COUNTDOWN_START - 1);
+  });
+
+  it("restarts the countdown if someone lets go early", () => {
+    let s = run(armed(), tick, tick);
+    s = run(s, up(2, 0));
+    expect(s.countdown).toBe(COUNTDOWN_START);
+    s = run(s, tick, tick, tick, { type: "begin_play", at: 0 });
+    expect(s.phase).toBe("countdown");
+  });
+
+  it("draws a target in range when play begins", () => {
+    for (const random of [0, 0.5, 0.9999]) {
+      const { target } = playing(1000, random);
+      expect(target).toBeGreaterThanOrEqual(TSUGITASHI_MIN_TARGET);
+      expect(target).toBeLessThanOrEqual(TSUGITASHI_MAX_TARGET);
+    }
+  });
+
+  it("locks in the shared counter when a player lets go, and ignores re-presses", () => {
+    let s = playing(1000);
+    s = run(s, up(0, 1000 + 3000));
+    expect(s.locked[0]).toBe(counterAt(3000));
+    expect(s.held[0]).toBe(false);
+    s = run(s, down(0, 5000), up(0, 6000));
+    expect(s.locked[0]).toBe(counterAt(3000));
+  });
+
+  it("ends once everyone has let go", () => {
+    let s = run(playing(1000), up(0, 2000), up(1, 2100), up(2, 2200));
+    expect(s.phase).toBe("playing");
+    s = run(s, up(3, 2300));
+    expect(s.phase).toBe("video");
+  });
+
+  it("busts everyone still holding when the counter passes the target", () => {
+    let s = run(playing(1000), up(0, 2000));
+    s = run(s, { type: "time_up" });
+    expect(s.phase).toBe("video");
+    for (const id of [1, 2, 3]) expect(s.locked[id]).toBeGreaterThan(s.target);
+    expect(s.locked[0]).toBeLessThanOrEqual(s.target);
+  });
+
+  it("runs the round until the counter busts", () => {
+    const s = playing(1000);
+    expect(roundDuration(s)).toBeCloseTo(bustMs(s.target));
   });
 });

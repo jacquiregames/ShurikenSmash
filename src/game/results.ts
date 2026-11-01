@@ -1,5 +1,6 @@
 import { getBonusImageUrl, getRankImageUrl } from "./config";
 import { STACK_ROWS } from "./stack";
+import { formatNumber, isBust } from "./tsugitashi";
 import type { BonusTier, GameMode, Ninja, PlayerResultInfo, StackPlayer } from "./types";
 
 export interface RoundInput {
@@ -9,6 +10,9 @@ export interface RoundInput {
   strikeTimes: readonly (number | undefined)[];
   /** Shinobi Stack towers, indexed by player id. */
   stacks?: readonly Pick<StackPlayer, "rows" | "status" | "finishedAtMs">[];
+  /** Tsugitashi: the target, and the counter value each player let go at. */
+  target?: number;
+  locked?: readonly (number | undefined)[];
 }
 
 export interface RoundResults {
@@ -55,6 +59,8 @@ export function computeResults({
   counts,
   strikeTimes,
   stacks = [],
+  target = 0,
+  locked = [],
 }: RoundInput): RoundResults {
   const byPlayer: Record<number, PlayerResultInfo> = {};
   const winnerIds = new Set<number>();
@@ -103,6 +109,25 @@ export function computeResults({
         continue;
       }
       const rank = competitionRank(entries, entry, isBetter);
+      byPlayer[entry.id] = placed(rank, label, playerCount);
+      if (rank === 1) winnerIds.add(entry.id);
+    }
+    return { winnerIds, byPlayer };
+  }
+
+  if (mode === "tsugitashi") {
+    // Closest without going over wins; going over is a bust.
+    const entries = players.map((p) => ({ id: p.id, value: locked[p.id] ?? target + 1 }));
+    const valid = entries.filter((e) => !isBust(e.value, target));
+    for (const entry of entries) {
+      const { value } = entry;
+      if (isBust(value, target)) {
+        byPlayer[entry.id] = failed("BUST", "BUST!");
+        continue;
+      }
+      const label =
+        value === target ? `EXACT! ${formatNumber(value)}` : `${formatNumber(target - value)} short`;
+      const rank = competitionRank(valid, entry, (a, b) => a.value > b.value);
       byPlayer[entry.id] = placed(rank, label, playerCount);
       if (rank === 1) winnerIds.add(entry.id);
     }

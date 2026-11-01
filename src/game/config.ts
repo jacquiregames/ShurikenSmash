@@ -8,6 +8,8 @@ export const ROUND_MS: Record<GameMode, number> = {
   stack: 30_000,
   /** Unused: Kunai Bullseye runs its own per-round fuse timer. */
   kunai: 10_000,
+  /** Safety cap only: a Tsugitashi round ends when the counter passes the target. */
+  tsugitashi: 15_000,
 };
 export const COUNTDOWN_START = 3;
 /** How long "STRIKE!" stays on screen before the round starts. */
@@ -19,6 +21,14 @@ export const VIDEO_FALLBACK_MS = 12_000;
 export const ENDED_HOLD_MS = 2000;
 /** Ignore keyboard "confirm" presses right after results appear (mashing guard). */
 export const RESULTS_INPUT_LOCK_MS = 1_000;
+/** Tsugitashi: the range the random target is drawn from. */
+export const TSUGITASHI_MIN_TARGET = 100_000;
+export const TSUGITASHI_MAX_TARGET = 999_999;
+/**
+ * Tsugitashi: the shared counter reads (elapsedMs / this)^3, so it accelerates and
+ * reaches the target range after roughly 4.5-10 seconds. Lower it to speed things up.
+ */
+export const TSUGITASHI_STEP_MS = 100;
 
 /* ---------- Players ---------- */
 export const MAX_PLAYERS = 4;
@@ -74,7 +84,13 @@ export const AVAILABLE_COLORS = Object.keys(COLOR_OPTIONS) as NinjaColor[];
 /* ---------- Modes ---------- */
 export const MODE_DETAILS: Record<
   GameMode,
-  { title: string; logoImage: string; rulesImage: string }
+  {
+    title: string;
+    /** Modes without logo/rules art fall back to the title and the `rules` text. */
+    logoImage?: string;
+    rulesImage?: string;
+    rules?: readonly string[];
+  }
 > = {
   mash: {
     title: "SHURIKEN SMASH",
@@ -96,7 +112,18 @@ export const MODE_DETAILS: Record<
     logoImage: getImageUrl("kunai-bullseye"),
     rulesImage: getImageUrl("kunai-rules"),
   },
+  tsugitashi: {
+    title: "TSUGITASHI",
+    rules: [
+      "Every ninja holds their button down to start.",
+      "One counter climbs toward the target, faster and faster.",
+      "Let go to lock in the number it shows.",
+      "Hold past the target and you BUST.",
+      "Closest without going over wins!",
+    ],
+  },
 };
 
 /** Modes that end with the win/lose videos and art. Stack and Kunai show their own end screens. */
-export const usesOutcomeMedia = (mode: GameMode) => mode === "mash" || mode === "blind";
+export const usesOutcomeMedia = (mode: GameMode) =>
+  mode === "mash" || mode === "blind" || mode === "tsugitashi";
