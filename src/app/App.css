@@ -1,0 +1,16 @@
+/* Order matters: this is the cascade order. */
+@import "../shared/styles/tokens.css";
+@import "../shared/styles/fonts.css";
+@import "../shared/styles/global.css";
+@import "../shared/styles/backdrop.css";
+@import "../shared/styles/header.css";
+@import "../shared/styles/controls.css";
+@import "../shared/styles/cards.css";
+@import "../shared/styles/shuriken.css";
+@import "../shared/styles/timer.css";
+@import "./menu.css";
+@import "./overlays.css";
+@import "../modes/mash/mash.css";
+@import "../modes/blind/blind.css";
+@import "../modes/stack/stack.css";
+@import "../modes/tsugitashi/tsugitashi.css";

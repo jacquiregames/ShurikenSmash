@@ -1,0 +1,95 @@
+.countdown-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.8));
+}
+
+.countdown-num {
+  font-family: var(--font-display);
+  font-size: clamp(10rem, 30vw, 22rem);
+  color: #fff;
+  text-shadow:
+    0 0 30px #ff3b4e,
+    0 0 80px #ff3b4e,
+    8px 8px 0 #6a0010;
+  animation: cd 1s cubic-bezier(0.2, 1.6, 0.4, 1) forwards;
+}
+
+@keyframes cd {
+  0% {
+    transform: scale(3) rotate(-15deg);
+    opacity: 0;
+  }
+  30% {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+
+.results-action-bar {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.8vh;
+  animation: actionBarIn 0.4s cubic-bezier(0.18, 1.25, 0.4, 1) both;
+}
+
+@keyframes actionBarIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.results-buttons {
+  display: flex;
+  gap: 1.2rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.results-action-bar .hint {
+  margin-top: 0.2rem;
+  font-size: 2rem;
+  color: #ffeed2;
+  opacity: 1;
+  text-shadow: 0 1px 4px #000;
+  letter-spacing: 0.08em;
+}
+
+.countdown-hold {
+  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  text-align: center;
+  animation: tsugiPulse 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes tsugiPulse {
+  from {
+    opacity: 0.6;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+}
