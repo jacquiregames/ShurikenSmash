@@ -1,0 +1,128 @@
+kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.8rem;
+  height: 1.8rem;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  background: linear-gradient(#2a2a32, #111);
+  border: 2px solid var(--c, #fff);
+  border-bottom-width: 3px;
+  border-radius: 4px;
+  color: var(--c, #fff);
+  text-shadow: 0 0 8px var(--g, transparent);
+}
+
+.start-btn {
+  cursor: pointer;
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition:
+    transform 0.15s,
+    filter 0.15s;
+  animation: btnPulse 1.6s ease-in-out infinite;
+}
+
+.start-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+}
+
+@keyframes btnPulse {
+  50% {
+    filter: brightness(1.25);
+  }
+}
+
+.start-btn-img {
+  height: clamp(55px, 8.5vh, 85px);
+  width: auto;
+  max-width: min(420px, 85vw);
+  object-fit: contain;
+  filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 25px rgba(255, 59, 78, 0.45));
+  user-select: none;
+  pointer-events: none;
+}
+
+.ghost-btn {
+  cursor: pointer;
+  position: relative;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  transition:
+    transform 0.15s,
+    filter 0.15s;
+}
+
+.ghost-btn:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+}
+
+.ghost-btn-img {
+  height: clamp(50px, 7.5vh, 75px);
+  width: auto;
+  max-width: min(360px, 80vw);
+  object-fit: contain;
+  filter: drop-shadow(0 4px 15px rgba(0, 0, 0, 0.7)) drop-shadow(0 0 25px rgba(255, 201, 60, 0.45));
+  user-select: none;
+  pointer-events: none;
+}
+
+.hint {
+  margin-top: 0.8rem;
+  opacity: 0.5;
+  font-size: 0.95rem;
+  letter-spacing: 0.1em;
+}
+
+.hint-small {
+  margin-top: 0.3rem;
+  font-size: 0.8rem;
+}
+
+button:focus-visible {
+  outline: 3px solid #ffc93c;
+  outline-offset: 3px;
+}
+
+/* App-wide mute toggle in the corner of the main game. */
+.mute-btn {
+  position: fixed;
+  top: 12px;
+  right: 14px;
+  z-index: 5;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #f4eee0;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
+}
+
+.mute-btn:hover {
+  transform: scale(1.08);
+  border-color: #ffc93c;
+}
+
+.mute-btn.off {
+  color: #ff3b4e;
+}

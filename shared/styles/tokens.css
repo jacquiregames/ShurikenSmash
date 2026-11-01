@@ -1,0 +1,16 @@
+/*
+ * The app's font system. Every mode uses these three tokens; nothing else names a font.
+ *
+ *   --font-display  headings, big numbers, buttons      (Bangers)
+ *   --font-body     everything else                     (Rajdhani)
+ *   --font-name     player names on the player cards    (Painting With Chocolate)
+ *
+ * Bangers and Rajdhani have no kanji or kana, so each stack falls back to Zen Kaku
+ * Gothic New (self-hosted, loaded from main.tsx) for the Japanese in Kunai Bullseye.
+ */
+:root {
+  --font-display: "Bangers", "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", cursive;
+  --font-body:
+    "Rajdhani", "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
+  --font-name: "Painting With Chocolate", var(--font-display);
+}
