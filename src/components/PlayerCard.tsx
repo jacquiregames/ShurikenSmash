@@ -4,6 +4,15 @@ import type { Ninja, Hit, GameMode, Outcome, PlayerResultInfo, StackPlayer } fro
 import { Shuriken } from "./Shuriken";
 import { StackField } from "./StackField";
 import { StackStats } from "./StackStats";
+import { formatNumber, isBust } from "../game/tsugitashi";
+
+/** A player's Tsugitashi button state. */
+export interface TsugiSeat {
+  held: boolean;
+  /** Counter value they let go at. */
+  locked?: number;
+  target: number;
+}
 
 interface PlayerCardProps {
   player: Ninja;
@@ -15,6 +24,8 @@ interface PlayerCardProps {
   hits: readonly Hit[];
   /** Tower state, used in Shinobi Stack mode. */
   stack?: StackPlayer;
+  /** Button state, used in Tsugitashi mode. */
+  tsugi?: TsugiSeat;
   lockedTime?: number;
   isLocked: boolean;
   outcome?: Outcome;
@@ -34,6 +45,7 @@ export const PlayerCard = memo(function PlayerCard({
   pulseId,
   hits,
   stack,
+  tsugi,
   lockedTime,
   isLocked,
   outcome,
@@ -117,7 +129,21 @@ export const PlayerCard = memo(function PlayerCard({
         </>
       ) : result ? (
         resultBadge
-      ) : activeVideoUrl ? null : (
+      ) : activeVideoUrl ? null : tsugi ? (
+        <div className="count tsugi-seat" key={`t${pulseId}`}>
+          {tsugi.locked !== undefined ? (
+            isBust(tsugi.locked, tsugi.target) ? (
+              <span className="tsugi-seat-bust">BUST!</span>
+            ) : (
+              <span className="locked-badge">{formatNumber(tsugi.locked)}</span>
+            )
+          ) : tsugi.held ? (
+            <span className="locked-badge">HOLDING</span>
+          ) : (
+            <span className="waiting-badge">HOLD!</span>
+          )}
+        </div>
+      ) : (
         <>
           <div className="shuriken-zone">
             <Shuriken pulseId={pulseId} />
@@ -154,7 +180,9 @@ export const PlayerCard = memo(function PlayerCard({
       )}
 
       {!activeVideoUrl && !result && (
-        <kbd className={`big-key ${isLocked ? "key-disabled" : ""}`}>{player.key}</kbd>
+        <kbd className={`big-key ${isLocked ? "key-disabled" : ""} ${tsugi?.held ? "key-held" : ""}`}>
+          {player.key}
+        </kbd>
       )}
     </div>
   );

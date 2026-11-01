@@ -1,8 +1,10 @@
 import { useMemo } from "react";
-import { MODE_DETAILS, ROUND_MS, getOutcomeVideoUrl, getImageUrl } from "./game/config";
+import { MODE_DETAILS, getOutcomeVideoUrl, getImageUrl } from "./game/config";
 import { computeResults } from "./game/results";
 import { useGame } from "./hooks/useGame";
+import { roundDuration } from "./game/reducer";
 import { Timer } from "./components/Timer";
+import { TsugitashiCounter } from "./components/TsugitashiCounter";
 import { PlayerCard } from "./components/PlayerCard";
 import { MenuPanel } from "./components/MenuPanel";
 import KunaiGame from "./kunai/KunaiGame";
@@ -11,13 +13,19 @@ import "./App.css";
 export default function App() {
   const { state, clock, actions } = useGame();
   const { phase, mode, numPlayers, ninjas, countdown, counts, strikeTimes, pulses, hits, stacks } = state;
+  const { target, held, locked } = state;
+  const { logoImage, title } = MODE_DETAILS[mode];
+  const durationMs = roundDuration(state);
+  const isTsugitashi = mode === "tsugitashi";
+  const everyoneHolding = held.slice(0, numPlayers).every(Boolean);
 
   const players = useMemo(() => ninjas.slice(0, numPlayers), [ninjas, numPlayers]);
   const isRoundOver = phase === "video" || phase === "ended" || phase === "results";
 
   const results = useMemo(
-    () => (isRoundOver ? computeResults({ mode, players, counts, strikeTimes, stacks }) : null),
-    [isRoundOver, mode, players, counts, strikeTimes, stacks]
+    () =>
+      isRoundOver ? computeResults({ mode, players, counts, strikeTimes, stacks, target, locked }) : null,
+    [isRoundOver, mode, players, counts, strikeTimes, stacks, target, locked]
   );
 
   const activeCounts = counts.slice(0, numPlayers);
@@ -30,7 +38,7 @@ export default function App() {
     return (
       <KunaiGame
         ninjas={players}
-        logoSrc={MODE_DETAILS.kunai.logoImage}
+        logoSrc={MODE_DETAILS.kunai.logoImage ?? ""}
         logoAlt={MODE_DETAILS.kunai.title}
         onExit={actions.returnToMenu}
       />
@@ -46,11 +54,11 @@ export default function App() {
       />
 
       <header className="title-bar">
-        <img
-          src={MODE_DETAILS[mode].logoImage}
-          alt={MODE_DETAILS[mode].title}
-          className="header-logo"
-        />
+        {logoImage ? (
+          <img src={logoImage} alt={title} className="header-logo" />
+        ) : (
+          <h1 className="header-title">{title}</h1>
+        )}
       </header>
 
       {phase === "menu" && (
@@ -67,7 +75,11 @@ export default function App() {
 
       {phase !== "menu" && (
         <>
-          <Timer phase={phase} mode={mode} clock={clock} durationMs={ROUND_MS[mode]} />
+          {isTsugitashi ? (
+            <TsugitashiCounter phase={phase} clock={clock} target={target} durationMs={durationMs} />
+          ) : (
+            <Timer phase={phase} mode={mode} clock={clock} durationMs={durationMs} />
+          )}
 
           <div className={`arena players-${numPlayers}`}>
             {players.map((p) => {
@@ -98,6 +110,7 @@ export default function App() {
                   pulseId={pulses[p.id]}
                   hits={hits[p.id]}
                   stack={stacks[p.id]}
+                  tsugi={isTsugitashi ? { held: held[p.id], locked: locked[p.id], target } : undefined}
                   lockedTime={strikeTimes[p.id]}
                   isLocked={isLocked}
                   outcome={outcome}
@@ -113,9 +126,13 @@ export default function App() {
 
           {phase === "countdown" && (
             <div className="countdown-overlay" aria-live="assertive">
-              <div className="countdown-num" key={countdown}>
-                {countdown > 0 ? countdown : "STRIKE!"}
-              </div>
+              {isTsugitashi && !everyoneHolding ? (
+                <div className="countdown-num countdown-hold">HOLD YOUR BUTTONS!</div>
+              ) : (
+                <div className="countdown-num" key={countdown}>
+                  {countdown > 0 ? countdown : "STRIKE!"}
+                </div>
+              )}
             </div>
           )}
 

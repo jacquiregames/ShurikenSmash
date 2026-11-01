@@ -21,6 +21,7 @@ export function MenuPanel({
   onSelectPlayerColor,
   onStartGame,
 }: MenuPanelProps) {
+  const { title, rulesImage, rules } = MODE_DETAILS[mode];
   return (
     <div className="menu panel">
       <div className="mode-tabs" role="group" aria-label="Game mode">
@@ -56,15 +57,25 @@ export function MenuPanel({
         >
           🎯 Kunai Bullseye (Aim)
         </button>
+        <button
+          type="button"
+          className={`tab-btn ${mode === "tsugitashi" ? "active" : ""}`}
+          aria-pressed={mode === "tsugitashi"}
+          onClick={() => onSelectMode("tsugitashi")}
+        >
+          ➕ Tsugitashi (Don't Go Over)
+        </button>
       </div>
 
       <div className="menu-interactive-section">
         <div className="rules-image-container">
-          <img
-            src={MODE_DETAILS[mode].rulesImage}
-            alt={`${MODE_DETAILS[mode].title} Rules`}
-            className="rules-image"
-          />
+          {rulesImage ? (
+            <img src={rulesImage} alt={`${title} Rules`} className="rules-image" />
+          ) : (
+            <ol className="rules-text">
+              {rules?.map((line) => <li key={line}>{line}</li>)}
+            </ol>
+          )}
           <img
             src={getRewardImageUrl(numPlayers)}
             alt="Battle Rewards"

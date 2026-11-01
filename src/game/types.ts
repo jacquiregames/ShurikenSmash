@@ -1,6 +1,6 @@
 /** `kunai` is the phase while Kunai Bullseye runs; it manages its own rounds and results. */
 export type Phase = "menu" | "countdown" | "playing" | "video" | "ended" | "results" | "kunai";
-export type GameMode = "mash" | "blind" | "stack" | "kunai";
+export type GameMode = "mash" | "blind" | "stack" | "kunai" | "tsugitashi";
 export type PlayerCount = 3 | 4;
 export type Outcome = "win" | "lose";
 export type NinjaColor = "blue" | "green" | "orange" | "purple" | "red" | "yellow";

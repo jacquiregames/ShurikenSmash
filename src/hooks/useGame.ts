@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import {
   COUNTDOWN_GO_MS,
   ENDED_HOLD_MS,
@@ -9,7 +9,9 @@ import {
   usesOutcomeMedia,
 } from "../game/config";
 import type { Clock, GameMode, NinjaColor, Outcome, PlayerCount } from "../game/types";
-import { createInitialState, gameReducer, nextStackDue } from "../game/reducer";
+import { createInitialState, gameReducer, nextStackDue, roundDuration } from "../game/reducer";
+import { isBust } from "../game/tsugitashi";
+import { bomb, startRiser, stopRiser, unlockAudio } from "../audio/tsugitashi";
 
 function createClock(initial: number): Clock {
   let value = initial;
@@ -42,6 +44,17 @@ export function useGame() {
   const [clock] = useState(() => createClock(ROUND_MS.mash));
   const { phase, mode, countdown, startedAt, ninjas, numPlayers } = state;
   const stackDue = nextStackDue(state);
+  const duration = roundDuration(state);
+  const isTsugitashi = mode === "tsugitashi";
+  // Tsugitashi's countdown waits until every ninja is holding their button.
+  const armed = !isTsugitashi || state.held.slice(0, numPlayers).every(Boolean);
+  const bustCount = isTsugitashi
+    ? state.locked.slice(0, numPlayers).filter((v) => v !== undefined && isBust(v, state.target)).length
+    : 0;
+  const modeRef = useRef(mode);
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
 
   const actions = useMemo(
     () => ({
@@ -103,13 +116,18 @@ export function useGame() {
       if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
       const isConfirm = e.code === "Enter" || e.code === "NumpadEnter" || e.code === "Space";
       if (isConfirm && tabNavigating && isActivatableControl(e.target)) return;
+      // Safari only lets audio start from inside a user gesture.
+      if (modeRef.current === "tsugitashi") unlockAudio();
       dispatch({ type: "key_down", code: e.code, at: e.timeStamp });
     };
+    const onKeyUp = (e: KeyboardEvent) => dispatch({ type: "key_up", code: e.code, at: e.timeStamp });
     window.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
     return () => {
       window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
     };
   }, []);
 
@@ -117,20 +135,20 @@ export function useGame() {
   useEffect(() => {
     if (phase !== "countdown") return;
     clock.set(ROUND_MS[mode]);
+    if (!armed) return;
     const id = window.setTimeout(
       () =>
         countdown > 0
           ? dispatch({ type: "countdown_tick" })
-          : dispatch({ type: "begin_play", at: performance.now() }),
+          : dispatch({ type: "begin_play", at: performance.now(), random: Math.random() }),
       countdown > 0 ? 1000 : COUNTDOWN_GO_MS
     );
     return () => window.clearTimeout(id);
-  }, [phase, mode, countdown, clock]);
+  }, [phase, mode, countdown, armed, clock]);
 
   // Game Play Loop
   useEffect(() => {
     if (phase !== "playing" || startedAt === null) return;
-    const duration = ROUND_MS[mode];
     let raf = 0;
     const tick = (now: number) => {
       const left = Math.min(duration, Math.max(0, duration - (now - startedAt)));
@@ -143,7 +161,19 @@ export function useGame() {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [phase, mode, startedAt, clock]);
+  }, [phase, duration, startedAt, clock]);
+
+  // Tsugitashi: one tone rises with the shared counter while it runs
+  useEffect(() => {
+    if (phase !== "playing" || !isTsugitashi) return;
+    startRiser();
+    return stopRiser;
+  }, [phase, isTsugitashi]);
+
+  // Tsugitashi: a bomb goes off whenever someone busts
+  useEffect(() => {
+    if (bustCount > 0) bomb();
+  }, [bustCount]);
 
   // Shinobi Stack: wake up exactly when the next block is due to move.
   //

@@ -93,3 +93,28 @@ describe("computeResults (stack)", () => {
     expect(none.byPlayer[0].rankLabel).toBe("NO BLOCKS");
   });
 });
+
+describe("computeResults (tsugitashi)", () => {
+  const input = (locked: (number | undefined)[]) => ({
+    mode: "tsugitashi" as const,
+    players,
+    counts: [],
+    strikeTimes: [],
+    target: 500_000,
+    locked,
+  });
+
+  it("ranks closest without going over, and busts anyone over", () => {
+    const r = computeResults(input([400_000, 500_001, 499_000, 900]));
+    expect([0, 1, 2, 3].map((i) => r.byPlayer[i].rank)).toEqual([2, null, 1, 3]);
+    expect([...r.winnerIds]).toEqual([2]);
+    expect(r.byPlayer[1].rankLabel).toBe("BUST");
+    expect(r.byPlayer[2].scoreLabel).toBe("1,000 short");
+  });
+
+  it("calls out an exact hit, shares ties, and has no winner if everyone busts", () => {
+    expect(computeResults(input([500_000, 0, 0, 0])).byPlayer[0].scoreLabel).toBe("EXACT! 500,000");
+    expect([...computeResults(input([10, 10, 5, 600_000])).winnerIds]).toEqual([0, 1]);
+    expect(computeResults(input([6e5, 6e5, 6e5, 6e5])).winnerIds.size).toBe(0);
+  });
+});
