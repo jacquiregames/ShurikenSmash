@@ -1,0 +1,19 @@
+.power {
+  position: absolute;
+  left: 8px;
+  top: 12%;
+  bottom: 12%;
+  width: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+.power-fill {
+  width: 100%;
+  background: linear-gradient(to top, var(--c), #fff);
+  box-shadow: 0 0 10px var(--c);
+  transition: height 0.15s;
+}

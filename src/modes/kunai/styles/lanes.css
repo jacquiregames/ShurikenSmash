@@ -1,0 +1,168 @@
+/* ---------- 4 player lanes (tactile arcade feeling) ---------- */
+
+.kb-root .lanes {
+  display: grid;
+  grid-template-columns: repeat(var(--np, 4), minmax(0, 1fr));
+  gap: 12px;
+  flex: none;
+}
+
+.kb-root .lane {
+  --c: var(--paper);
+  position: relative;
+  padding: 10px 14px 12px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(
+      100% 60% at 50% 0%,
+      color-mix(in srgb, var(--c) 10%, rgba(30, 35, 50, 0.9)),
+      rgba(11, 13, 20, 0.95)
+    ),
+    linear-gradient(180deg, rgba(28, 33, 48, 0.92), rgba(10, 12, 18, 0.96));
+  box-shadow:
+    var(--shadow-lift),
+    inset 0 1px 0 rgba(244, 234, 214, 0.06);
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s,
+    transform 0.3s;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.kb-root .lane::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3.5px;
+  background: var(--c);
+  box-shadow: 0 0 16px var(--c);
+  opacity: 0.85;
+}
+
+.kb-root .lane.is-active {
+  border-color: color-mix(in srgb, var(--c) 55%, transparent);
+  box-shadow:
+    var(--shadow-lift),
+    0 0 24px color-mix(in srgb, var(--c) 25%, transparent),
+    inset 0 0 30px rgba(0, 0, 0, 0.4);
+}
+
+.kb-root .lane.locked {
+  transform: translateY(2px);
+  cursor: default;
+}
+
+.kb-root .lane.bull {
+  animation: kb-lane-bull 1.2s ease-out;
+}
+
+@keyframes kb-lane-bull {
+  0% {
+    box-shadow: 0 0 0 0 var(--c);
+  }
+  30% {
+    box-shadow:
+      0 0 0 8px color-mix(in srgb, var(--c) 40%, transparent),
+      0 0 60px var(--c);
+  }
+  100% {
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+.kb-root .lane-head {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+/* Mechanical 3D Key Button */
+.kb-root .pad {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--c) 65%, #000);
+  border-bottom: 4px solid color-mix(in srgb, var(--c) 75%, #000);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--c) 35%, #181c28), #141722);
+  font-weight: 900;
+  font-size: 19px;
+  color: var(--paper);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  transition:
+    transform 0.08s,
+    border-bottom-width 0.08s,
+    box-shadow 0.2s,
+    background 0.2s;
+  user-select: none;
+}
+
+.kb-root .pad:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 14px color-mix(in srgb, var(--c) 40%, transparent);
+}
+
+.kb-root .pad.down {
+  transform: translateY(3px);
+  border-bottom-width: 1px;
+  background: linear-gradient(180deg, var(--c), color-mix(in srgb, var(--c) 60%, #000));
+  box-shadow: 0 0 28px var(--c);
+  color: #12100c;
+  text-shadow: none;
+}
+
+.kb-root .lane.locked .pad {
+  opacity: 0.5;
+  filter: saturate(0.5);
+  transform: translateY(2px);
+  border-bottom-width: 2px;
+}
+
+.kb-root .lane.waiting .pad {
+  opacity: 0.45;
+  filter: saturate(0.4);
+}
+
+.kb-root .lane-name {
+  min-width: 0;
+}
+
+.kb-root .lane-name .t {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-name);
+  font-weight: 400;
+  font-size: 19px;
+  letter-spacing: 0.04em;
+  color: var(--paper);
+  line-height: 1.1;
+}
+
+.kb-root .lane-status {
+  margin-left: auto;
+  font-family: var(--display);
+  font-size: 10.5px;
+  letter-spacing: 0.16em;
+  color: var(--ash);
+  text-transform: uppercase;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.kb-root .lane-status.ready {
+  color: var(--c);
+  font-weight: 700;
+  animation: kb-blink 1.2s steps(2) infinite;
+}
+
+.kb-root .lane-status.landed {
+  color: var(--c);
+  font-weight: 700;
+}

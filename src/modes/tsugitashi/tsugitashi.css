@@ -1,0 +1,115 @@
+.tsugi-counter {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin: 1vh 0 2vh;
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+}
+
+.tsugi-target {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.6rem;
+  color: #ffc93c;
+  text-shadow:
+    0 0 14px rgba(255, 201, 60, 0.6),
+    2px 2px 0 #000;
+}
+
+.tsugi-target-label {
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.tsugi-target-value {
+  font-size: clamp(1.8rem, 4vw, 3rem);
+}
+
+.tsugi-value {
+  font-size: clamp(3.5rem, 9vw, 7rem);
+  line-height: 1;
+  color: #fff;
+  text-shadow:
+    0 0 24px #ffc93c,
+    4px 4px 0 #000;
+}
+
+.tsugi-bust .tsugi-value {
+  color: #ff3b4e;
+  text-shadow:
+    0 0 24px rgba(255, 59, 78, 0.9),
+    4px 4px 0 #000;
+  animation: tsugiShake 0.4s ease-out;
+}
+
+@keyframes tsugiShake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-10px);
+  }
+  40% {
+    transform: translateX(10px);
+  }
+  60% {
+    transform: translateX(-6px);
+  }
+  80% {
+    transform: translateX(6px);
+  }
+}
+
+.tsugi-seat {
+  font-size: clamp(1.8rem, 4vw, 3.2rem);
+}
+
+.tsugi-seat-bust {
+  color: #ff3b4e;
+  text-shadow:
+    0 0 18px rgba(255, 59, 78, 0.9),
+    3px 3px 0 #000;
+}
+
+.big-key.key-held {
+  transform: translateY(4px) scale(0.95);
+  box-shadow: 0 0 40px var(--g);
+}
+
+/* Sound-set picker on the menu */
+.tsugi-tone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.tsugi-tone-label {
+  font-family: var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.tsugi-tone-btn {
+  font: inherit;
+  font-family: var(--font-body);
+  font-weight: 700;
+  padding: 6px 16px;
+  cursor: pointer;
+  color: #f4eee0;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 999px;
+}
+
+.tsugi-tone-btn.selected {
+  color: #1a1020;
+  background: #ffc93c;
+  border-color: #ffc93c;
+}

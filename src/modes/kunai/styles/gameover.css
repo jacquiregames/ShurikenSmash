@@ -1,0 +1,318 @@
+/* ---------- match-over screen (GameOver.tsx) ---------- */
+
+.kb-root .over {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: radial-gradient(120% 90% at 50% 30%, rgba(20, 24, 38, 0.9), rgba(4, 5, 9, 0.96));
+  animation: kb-over-in 0.4s ease-out both;
+}
+
+@keyframes kb-over-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.kb-root .over .petal {
+  position: absolute;
+  top: 0;
+  pointer-events: none;
+  animation: kb-petal-fall linear infinite;
+}
+
+@keyframes kb-petal-fall {
+  from {
+    transform: translate(0, -8vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  to {
+    transform: translate(var(--dx), 108vh) rotate(var(--spin));
+    opacity: 0.8;
+  }
+}
+
+.kb-root .over-card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 940px);
+  padding: 30px clamp(16px, 4vw, 36px) 26px;
+  text-align: center;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(35, 42, 60, 0.92), rgba(12, 14, 21, 0.97)),
+    linear-gradient(180deg, rgba(28, 33, 48, 0.92), rgba(10, 12, 18, 0.98));
+  box-shadow:
+    var(--shadow-deep),
+    inset 0 1px 0 rgba(244, 234, 214, 0.08);
+}
+
+.kb-root .over-card::before,
+.kb-root .over-card::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid rgba(227, 178, 60, 0.7);
+  pointer-events: none;
+}
+.kb-root .over-card::before {
+  top: -1px;
+  left: -1px;
+  border-right: 0;
+  border-bottom: 0;
+}
+.kb-root .over-card::after {
+  bottom: -1px;
+  right: -1px;
+  border-left: 0;
+  border-top: 0;
+}
+
+.kb-root .seal {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 8px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-family: var(--display);
+  font-size: 28px;
+  color: rgba(255, 236, 226, 0.95);
+  background: radial-gradient(circle at 38% 34%, rgba(240, 105, 79, 0.92), rgba(142, 27, 24, 0.95));
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 220, 200, 0.25),
+    0 8px 18px rgba(0, 0, 0, 0.6);
+  transform: rotate(-8deg);
+}
+
+.kb-root .over-kicker {
+  font-family: var(--display);
+  font-size: 13px;
+  letter-spacing: 0.4em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.kb-root .over-title {
+  margin-top: 4px;
+  font-family: var(--display);
+  font-size: clamp(34px, 6vw, 68px);
+  line-height: 1;
+  letter-spacing: 0.04em;
+  color: var(--paper);
+  text-transform: uppercase;
+  text-shadow: 0 6px 0 rgba(0, 0, 0, 0.5);
+}
+
+.kb-root .over-title em {
+  font-style: normal;
+  color: var(--gold);
+  text-shadow: 0 0 36px rgba(227, 178, 60, 0.6);
+}
+
+.kb-root .over-sub {
+  margin-top: 8px;
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  color: var(--paper-dim);
+  text-transform: uppercase;
+}
+
+.kb-root .winners {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  margin: 20px 0 18px;
+}
+
+.kb-root .wcard {
+  position: relative;
+  min-width: 190px;
+  padding: 16px 22px 14px;
+  border: 2px solid var(--c);
+  background: color-mix(in srgb, var(--c) 12%, rgba(10, 12, 18, 0.9));
+  box-shadow: 0 0 30px color-mix(in srgb, var(--c) 35%, transparent);
+  animation: kb-wcard-in 0.5s cubic-bezier(0.2, 1.3, 0.4, 1) var(--dl, 0s) both;
+}
+
+@keyframes kb-wcard-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.9);
+  }
+}
+
+.kb-root .wcard .halo {
+  position: absolute;
+  inset: -6px;
+  border: 1px solid var(--c);
+  opacity: 0.5;
+  pointer-events: none;
+  animation: kb-halo 2s ease-in-out infinite;
+}
+
+@keyframes kb-halo {
+  50% {
+    transform: scale(1.04);
+    opacity: 0.15;
+  }
+}
+
+.kb-root .wcard .cap {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  font-weight: 900;
+  color: #12100c;
+  background: var(--c);
+  border-radius: 5px;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.kb-root .wcard .nm {
+  margin-top: 6px;
+  font-family: var(--font-name);
+  font-size: 32px;
+  line-height: 1.1;
+  color: var(--c);
+}
+
+.kb-root .wcard .sc {
+  font-family: var(--display);
+  font-size: 40px;
+  line-height: 1;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+}
+.kb-root .wcard .sc small {
+  margin-left: 4px;
+  font-size: 13px;
+  color: var(--paper-dim);
+}
+
+.kb-root .wcard .tag {
+  margin-top: 6px;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--ash);
+  text-transform: uppercase;
+}
+
+.kb-root .over .table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+
+.kb-root .over .table th,
+.kb-root .over .table td {
+  padding: 8px 10px;
+  text-align: center;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.kb-root .over .table th {
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  color: var(--ash);
+  text-transform: uppercase;
+}
+
+.kb-root .over .table .name {
+  text-align: left;
+}
+
+.kb-root .over .table tbody tr {
+  color: var(--paper-dim);
+}
+.kb-root .over .table tbody tr .name {
+  color: var(--c);
+}
+.kb-root .over .table tbody tr.win {
+  color: var(--paper);
+  background: linear-gradient(90deg, rgba(227, 178, 60, 0.18), transparent);
+}
+.kb-root .over .table tbody tr.dim {
+  opacity: 0.55;
+}
+.kb-root .over .table .tot {
+  font-family: var(--display);
+  font-size: 18px;
+  color: var(--gold);
+}
+
+.kb-root .over-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.kb-root .over .btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 22px;
+  font-family: var(--display);
+  font-size: 18px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--paper);
+  border: 1px solid var(--vermilion);
+  background: linear-gradient(180deg, rgba(226, 72, 58, 0.55), rgba(142, 27, 24, 0.55));
+  transition:
+    transform 0.15s,
+    filter 0.15s;
+}
+.kb-root .over .btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.15);
+}
+.kb-root .over .btn.ghost {
+  border-color: var(--line);
+  background: rgba(244, 234, 214, 0.04);
+  color: var(--paper-dim);
+}
+
+.kb-root .over .btn .pulse-ring {
+  position: absolute;
+  inset: -4px;
+  border: 1px solid var(--vermilion);
+  pointer-events: none;
+  animation: kb-halo 1.6s ease-in-out infinite;
+}
+
+.kb-root .over .btn .kb {
+  padding: 1px 7px;
+  font-family: var(--body);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  border: 1px solid var(--line);
+  border-bottom-width: 3px;
+  border-radius: 4px;
+  background: var(--ink-800);
+  color: var(--paper-2);
+}
+
+.kb-root .over .title-note {
+  width: 100%;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  color: var(--ash);
+  text-transform: uppercase;
+}
