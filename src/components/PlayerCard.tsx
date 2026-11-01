@@ -1,7 +1,9 @@
 import { memo, useEffect, useRef, useState, type CSSProperties } from "react";
 import { getOutcomeImageUrl } from "../game/config";
-import type { Ninja, Hit, GameMode, Outcome, PlayerResultInfo } from "../game/types";
+import type { Ninja, Hit, GameMode, Outcome, PlayerResultInfo, StackPlayer } from "../game/types";
 import { Shuriken } from "./Shuriken";
+import { StackField } from "./StackField";
+import { StackStats } from "./StackStats";
 
 interface PlayerCardProps {
   player: Ninja;
@@ -11,6 +13,8 @@ interface PlayerCardProps {
   isLeading: boolean;
   pulseId: number;
   hits: readonly Hit[];
+  /** Tower state, used in Shinobi Stack mode. */
+  stack?: StackPlayer;
   lockedTime?: number;
   isLocked: boolean;
   outcome?: Outcome;
@@ -18,6 +22,7 @@ interface PlayerCardProps {
   result?: PlayerResultInfo;
   onVideoEnd: (playerId: number) => void;
   onHitDone: (playerId: number, hitId: number) => void;
+  onBurstDone: (playerId: number, burstId: number) => void;
 }
 
 export const PlayerCard = memo(function PlayerCard({
@@ -28,6 +33,7 @@ export const PlayerCard = memo(function PlayerCard({
   isLeading,
   pulseId,
   hits,
+  stack,
   lockedTime,
   isLocked,
   outcome,
@@ -35,6 +41,7 @@ export const PlayerCard = memo(function PlayerCard({
   result,
   onVideoEnd,
   onHitDone,
+  onBurstDone,
 }: PlayerCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [failedVideoUrl, setFailedVideoUrl] = useState<string>();
@@ -59,9 +66,19 @@ export const PlayerCard = memo(function PlayerCard({
 
   const bgImage = outcome ? getOutcomeImageUrl(player.colorName, outcome) : player.bgImage;
 
+  const isStack = mode === "stack" && stack !== undefined;
+
+  const resultBadge = result && (
+    <div className={`card-result-badge ${isStack ? "compact" : ""}`}>
+      <img src={result.rankImage} alt={result.rankLabel} className="card-rank-img" />
+      <div className="card-result-score">{result.scoreLabel}</div>
+      {result.bonusImage && <img src={result.bonusImage} alt="" className="card-bonus-img" />}
+    </div>
+  );
+
   return (
     <div
-      className={`card ${isLeading ? "leading" : ""} ${isLocked ? "card-locked" : ""} ${
+      className={`card mode-${mode} ${isLeading ? "leading" : ""} ${isLocked ? "card-locked" : ""} ${
         outcome ? `outcome-${outcome}` : ""
       } ${activeVideoUrl ? "has-video" : ""}`}
       style={{ "--c": player.color, "--g": player.glow } as CSSProperties}
@@ -83,22 +100,23 @@ export const PlayerCard = memo(function PlayerCard({
         <>
           <div className="card-bg-image" style={{ backgroundImage: `url("${bgImage}")` }} />
           <div className="card-overlay" />
-          <div className="card-kanji" aria-hidden="true">
-            {player.kanji}
-          </div>
         </>
       )}
 
       <div className="card-name">{player.name}</div>
 
-      {result ? (
-        <div className="card-result-badge">
-          <img src={result.rankImage} alt={result.rankLabel} className="card-rank-img" />
-          <div className="card-result-score">{result.scoreLabel}</div>
-          {result.bonusImage && (
-            <img src={result.bonusImage} alt="" className="card-bonus-img" />
-          )}
-        </div>
+      {isStack && stack ? (
+        <>
+          <StackField
+            playerId={player.id}
+            stack={stack}
+            pulseId={pulseId}
+            onBurstDone={onBurstDone}
+          />
+          {resultBadge ?? <StackStats rows={stack.rows} />}
+        </>
+      ) : result ? (
+        resultBadge
       ) : activeVideoUrl ? null : (
         <>
           <div className="shuriken-zone">

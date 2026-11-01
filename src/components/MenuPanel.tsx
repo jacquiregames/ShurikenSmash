@@ -40,6 +40,22 @@ export function MenuPanel({
         >
           ⏱ Shadow Strike (Blind 10s)
         </button>
+        <button
+          type="button"
+          className={`tab-btn ${mode === "stack" ? "active" : ""}`}
+          aria-pressed={mode === "stack"}
+          onClick={() => onSelectMode("stack")}
+        >
+          🏯 Shinobi Stack (Climb)
+        </button>
+        <button
+          type="button"
+          className={`tab-btn ${mode === "kunai" ? "active" : ""}`}
+          aria-pressed={mode === "kunai"}
+          onClick={() => onSelectMode("kunai")}
+        >
+          🎯 Kunai Bullseye (Aim)
+        </button>
       </div>
 
       <div className="menu-interactive-section">

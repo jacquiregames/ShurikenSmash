@@ -1,0 +1,212 @@
+/* ---------- Dedicated Round Scores Table in Scoreboard ---------- */
+
+.round-scores-card {
+  margin: 6px 8px 10px;
+  padding: 8px 10px 10px;
+  border: 1px solid rgba(227, 178, 60, 0.3);
+  border-radius: 4px;
+  background: rgba(8, 10, 16, 0.65);
+  box-shadow: inset 0 0 16px rgba(0, 0, 0, 0.5);
+}
+
+.round-scores-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.rsh-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rsh-icon {
+  font-size: 12px;
+}
+
+.round-scores-head h3 {
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  text-transform: uppercase;
+}
+
+.round-scores-kanji {
+  font-family: var(--display);
+  font-size: 10px;
+  letter-spacing: 0.25em;
+  color: var(--ash);
+}
+
+.round-scores-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.round-scores-table th,
+.round-scores-table td {
+  padding: 4px 6px;
+  text-align: center;
+}
+
+.round-scores-table th {
+  font-family: var(--display);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ash);
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--line-soft);
+  font-weight: 600;
+}
+
+.round-scores-table th.th-cur-round {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.round-scores-table th.th-ninja {
+  text-align: left;
+}
+
+.round-scores-table th.th-tot {
+  text-align: right;
+  color: var(--paper-2);
+}
+
+.round-scores-table td.td-ninja {
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.rs-cap {
+  width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  font-size: 9.5px;
+  font-weight: 900;
+  color: #10081d;
+  border-radius: 3px;
+  line-height: 1;
+}
+
+.rs-name {
+  font-family: var(--display);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.td-score {
+  font-weight: 600;
+  color: var(--paper-dim);
+}
+
+.td-score.has-val {
+  color: #fff;
+}
+
+.td-score.bull-val {
+  color: var(--gold);
+  font-weight: 800;
+  text-shadow: 0 0 8px rgba(227, 178, 60, 0.6);
+}
+
+.td-score.empty-val {
+  color: var(--ash);
+  opacity: 0.6;
+}
+
+.td-score.current-col {
+  background: rgba(227, 178, 60, 0.08);
+}
+
+.td-tot {
+  text-align: right;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--paper);
+}
+
+.rs-leader td.td-tot {
+  color: var(--gold);
+  text-shadow: 0 0 10px rgba(227, 178, 60, 0.5);
+}
+
+/* Legend */
+.legend {
+  border-top: 1px solid var(--line-soft);
+  padding: 10px 14px 12px;
+  margin-top: auto;
+}
+
+.legend-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.legend h3 {
+  font-family: var(--display);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: var(--ash);
+  text-transform: uppercase;
+}
+
+.legend-kanji {
+  font-size: 9px;
+  color: var(--gold);
+  opacity: 0.7;
+}
+
+.legend ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--paper-dim);
+}
+
+.legend .dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.legend .zone-jp {
+  font-size: 9.5px;
+  color: var(--ash);
+  margin-left: 2px;
+}
+
+.legend .zone-pts {
+  margin-left: auto;
+  font-family: var(--display);
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+  font-size: 10.5px;
+}

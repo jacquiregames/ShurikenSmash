@@ -1,16 +1,18 @@
 import { memo, useSyncExternalStore } from "react";
-import { GAME_MS, BLIND_THRESHOLD_MS } from "../game/config";
+import { BLIND_THRESHOLD_MS } from "../game/config";
 import type { Phase, GameMode, Clock } from "../game/types";
 
 interface TimerProps {
   phase: Phase;
   mode: GameMode;
   clock: Clock;
+  /** Full round length, used for the idle display and the progress bar. */
+  durationMs: number;
 }
 
 const formatSeconds = (ms: number) => (ms / 1000).toFixed(2);
 
-export const Timer = memo(function Timer({ phase, mode, clock }: TimerProps) {
+export const Timer = memo(function Timer({ phase, mode, clock, durationMs }: TimerProps) {
   const timeLeft = useSyncExternalStore(clock.subscribe, clock.getSnapshot);
 
   const isPlaying = phase === "playing";
@@ -20,8 +22,8 @@ export const Timer = memo(function Timer({ phase, mode, clock }: TimerProps) {
 
   const displayTime = isBlindHidden
     ? "??.?? (BLIND)"
-    : formatSeconds(showLive ? timeLeft : GAME_MS);
-  const widthPct = isBlindHidden ? 0 : showLive ? (timeLeft / GAME_MS) * 100 : 100;
+    : formatSeconds(showLive ? timeLeft : durationMs);
+  const widthPct = isBlindHidden ? 0 : showLive ? (timeLeft / durationMs) * 100 : 100;
   const isDanger = !isBlindHidden && timeLeft < 3000;
 
   return (

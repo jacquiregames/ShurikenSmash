@@ -1,28 +1,41 @@
 import { useMemo } from "react";
-import { MODE_DETAILS, getOutcomeVideoUrl, getImageUrl } from "./game/config";
+import { MODE_DETAILS, ROUND_MS, getOutcomeVideoUrl, getImageUrl } from "./game/config";
 import { computeResults } from "./game/results";
 import { useGame } from "./hooks/useGame";
 import { Timer } from "./components/Timer";
 import { PlayerCard } from "./components/PlayerCard";
 import { MenuPanel } from "./components/MenuPanel";
+import KunaiGame from "./kunai/KunaiGame";
 import "./App.css";
 
 export default function App() {
   const { state, clock, actions } = useGame();
-  const { phase, mode, numPlayers, ninjas, countdown, counts, strikeTimes, pulses, hits } = state;
+  const { phase, mode, numPlayers, ninjas, countdown, counts, strikeTimes, pulses, hits, stacks } = state;
 
   const players = useMemo(() => ninjas.slice(0, numPlayers), [ninjas, numPlayers]);
   const isRoundOver = phase === "video" || phase === "ended" || phase === "results";
 
   const results = useMemo(
-    () => (isRoundOver ? computeResults({ mode, players, counts, strikeTimes }) : null),
-    [isRoundOver, mode, players, counts, strikeTimes]
+    () => (isRoundOver ? computeResults({ mode, players, counts, strikeTimes, stacks }) : null),
+    [isRoundOver, mode, players, counts, strikeTimes, stacks]
   );
 
   const activeCounts = counts.slice(0, numPlayers);
   const topScore = Math.max(...activeCounts);
   const maxCount = Math.max(1, topScore);
   const leadersCount = activeCounts.filter((c) => c === topScore).length;
+
+  // Kunai Bullseye is a self-contained game: it replaces the whole screen until players exit.
+  if (phase === "kunai") {
+    return (
+      <KunaiGame
+        ninjas={players}
+        logoSrc={MODE_DETAILS.kunai.logoImage}
+        logoAlt={MODE_DETAILS.kunai.title}
+        onExit={actions.returnToMenu}
+      />
+    );
+  }
 
   return (
     <div className={`game phase-${phase}`}>
@@ -54,7 +67,7 @@ export default function App() {
 
       {phase !== "menu" && (
         <>
-          <Timer phase={phase} mode={mode} clock={clock} />
+          <Timer phase={phase} mode={mode} clock={clock} durationMs={ROUND_MS[mode]} />
 
           <div className={`arena players-${numPlayers}`}>
             {players.map((p) => {
@@ -67,7 +80,8 @@ export default function App() {
                 count === topScore &&
                 leadersCount === 1;
 
-              const outcome = results ? (results.winnerIds.has(p.id) ? "win" : "lose") : undefined;
+              const outcome =
+                results && mode !== "stack" ? (results.winnerIds.has(p.id) ? "win" : "lose") : undefined;
               const videoUrl =
                 phase === "video" && outcome
                   ? getOutcomeVideoUrl(p.colorName, outcome)
@@ -83,6 +97,7 @@ export default function App() {
                   isLeading={isLeading}
                   pulseId={pulses[p.id]}
                   hits={hits[p.id]}
+                  stack={stacks[p.id]}
                   lockedTime={strikeTimes[p.id]}
                   isLocked={isLocked}
                   outcome={outcome}
@@ -90,6 +105,7 @@ export default function App() {
                   result={phase === "results" ? results?.byPlayer[p.id] : undefined}
                   onVideoEnd={actions.videoEnded}
                   onHitDone={actions.hitDone}
+                  onBurstDone={actions.burstDone}
                 />
               );
             })}

@@ -1,7 +1,14 @@
 import type { GameMode, NinjaColor, Outcome, PlayerCount, BonusTier } from "./types";
 
 /* ---------- Timing ---------- */
-export const GAME_MS = 10_000;
+/** Round length per game mode. */
+export const ROUND_MS: Record<GameMode, number> = {
+  mash: 10_000,
+  blind: 10_000,
+  stack: 30_000,
+  /** Unused: Kunai Bullseye runs its own per-round fuse timer. */
+  kunai: 10_000,
+};
 export const COUNTDOWN_START = 3;
 /** How long "STRIKE!" stays on screen before the round starts. */
 export const COUNTDOWN_GO_MS = 600;
@@ -28,6 +35,11 @@ export const getOutcomeImageUrl = (colorName: NinjaColor, outcome: Outcome) =>
 export const getOutcomeVideoUrl = (colorName: NinjaColor, outcome: Outcome) =>
   `${base}videos/winlose/${colorName}-${outcome}.mp4`;
 export const getBonusImageUrl = (name: BonusTier) => `${base}images/${name}.webp`;
+/** Art overlaid on a stack block. Blocks are 1-3 cells wide. */
+export const getRowImageUrl = (width: number) => {
+  const cells = Math.min(3, Math.max(1, Math.round(width)));
+  return getImageUrl(`${cells}x1row`, "png");
+};
 
 export const getRankImageUrl = (rank: number | null) => {
   switch (rank) {
@@ -74,4 +86,17 @@ export const MODE_DETAILS: Record<
     logoImage: getImageUrl("shadow-strike"),
     rulesImage: getImageUrl("strike-rules"),
   },
+  stack: {
+    title: "SHINOBI STACK",
+    logoImage: getImageUrl("shinobi-stack"),
+    rulesImage: getImageUrl("stack-rules"),
+  },
+  kunai: {
+    title: "KUNAI BULLSEYE",
+    logoImage: getImageUrl("kunai-bullseye"),
+    rulesImage: getImageUrl("kunai-rules"),
+  },
 };
+
+/** Modes that end with the win/lose videos and art. Stack and Kunai show their own end screens. */
+export const usesOutcomeMedia = (mode: GameMode) => mode === "mash" || mode === "blind";

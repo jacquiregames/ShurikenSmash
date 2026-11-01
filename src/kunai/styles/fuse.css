@@ -1,0 +1,123 @@
+/* ---------- fuse (burning ninja rope timer) ---------- */
+
+.fuse-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+}
+
+.fuse-label-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fuse-icon {
+  font-size: 14px;
+}
+
+.fuse-row .lbl {
+  font-family: var(--display);
+  font-size: 10.5px;
+  letter-spacing: 0.28em;
+  color: var(--paper-dim);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.fuse {
+  position: relative;
+  height: 12px;
+  background: #11141c;
+  border: 1px solid rgba(244, 234, 214, 0.16);
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.rope-texture {
+  position: absolute;
+  inset: 0;
+  opacity: 0.25;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0.1) 0 3px,
+    transparent 3px 6px
+  );
+}
+
+.fuse .fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left;
+  transform: scaleX(var(--f, 1));
+  background: linear-gradient(
+    90deg,
+    #5a1814 0%,
+    var(--vermilion) 60%,
+    #f39c12 85%,
+    #ffd255 100%
+  );
+  box-shadow: 0 0 12px rgba(243, 156, 18, 0.6);
+  transition: background 0.3s;
+}
+
+.spark-head {
+  position: absolute;
+  right: -3px;
+  top: -4px;
+  bottom: -4px;
+  width: 10px;
+  background: #ffffff;
+  border-radius: 50%;
+  box-shadow:
+    0 0 12px 3px #ffea78,
+    0 0 22px 6px #e2483a;
+  animation: kb-ember-flicker 0.2s infinite alternate;
+}
+
+@keyframes kb-ember-flicker {
+  0% {
+    transform: scale(0.85);
+    filter: brightness(1);
+  }
+  100% {
+    transform: scale(1.25);
+    filter: brightness(1.35);
+  }
+}
+
+.fuse.is-danger .fill {
+  background: linear-gradient(90deg, #3d0c0a 0%, #a8201a 50%, #ff3b30 100%);
+  animation: kb-fuse-pulse 0.35s steps(2) infinite;
+}
+
+@keyframes kb-fuse-pulse {
+  50% {
+    filter: brightness(1.4);
+  }
+}
+
+.fuse-row .val {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 19px;
+  color: var(--paper);
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+  text-align: right;
+  letter-spacing: 0.04em;
+}
+
+.fuse-row .val.is-danger {
+  color: #ff4d4f;
+  text-shadow: 0 0 12px rgba(255, 77, 79, 0.8);
+  animation: kb-fuse-text-blink 0.4s infinite alternate;
+}
+
+@keyframes kb-fuse-text-blink {
+  to {
+    transform: scale(1.08);
+  }
+}

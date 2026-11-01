@@ -1,0 +1,198 @@
+/* ---------- kunai on board & flight trajectory ---------- */
+
+.stuck {
+  position: absolute;
+  left: calc(50% + var(--x) * 1%);
+  top: calc(50% + var(--y) * 1%);
+  width: 16%;
+  min-width: 80px;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.stuck .flight {
+  animation: kb-kunai-fly 0.52s cubic-bezier(0.12, 0.78, 0.2, 1) both;
+}
+
+.stuck .blade {
+  display: block;
+  width: 100%;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.7));
+  animation: kb-kunai-wob 0.65s 0.5s ease-out both;
+}
+
+@keyframes kb-kunai-fly {
+  0% {
+    transform: translate(calc(var(--x) * -1% * 0.45), 340px) rotate(-55deg) scale(2.1);
+    opacity: 0;
+    filter: blur(8px);
+  }
+  15% {
+    opacity: 1;
+  }
+  90% {
+    filter: blur(0);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes kb-kunai-wob {
+  0% {
+    transform: rotate(var(--rot)) scale(1.08, 0.92);
+  }
+  22% {
+    transform: rotate(calc(var(--rot) - 4deg)) scale(0.96, 1.04);
+  }
+  45% {
+    transform: rotate(calc(var(--rot) + 2.5deg)) scale(1.02, 0.98);
+  }
+  70% {
+    transform: rotate(calc(var(--rot) - 1.2deg)) scale(0.99, 1.01);
+  }
+  100% {
+    transform: rotate(var(--rot)) scale(1);
+  }
+}
+
+/* Impact particle fx */
+.impact {
+  position: absolute;
+  left: calc(50% + var(--x) * 1%);
+  top: calc(50% + var(--y) * 1%);
+  z-index: 3;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+.shock {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  border: 2px solid var(--c);
+  animation: kb-shock 0.64s ease-out forwards;
+}
+
+.bull-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 32px;
+  height: 32px;
+  margin: -16px 0 0 -16px;
+  border-radius: 50%;
+  border: 3px solid #ffea78;
+  box-shadow: 0 0 20px #f8ca4d;
+  animation: kb-shock 0.8s ease-out forwards;
+}
+
+@keyframes kb-shock {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.95;
+    border-width: 5px;
+  }
+  100% {
+    transform: scale(7.5);
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+.spark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: linear-gradient(var(--c), rgba(255, 245, 210, 0.2));
+  transform-origin: 50% 0;
+  animation: kb-spark 0.58s ease-out forwards;
+}
+
+@keyframes kb-spark {
+  0% {
+    transform: rotate(var(--a)) translateY(0) scaleY(0.4);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(var(--a)) translateY(var(--len)) scaleY(1.2);
+    opacity: 0;
+  }
+}
+
+.dust {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(235, 215, 185, 0.55), transparent 68%);
+  animation: kb-dust 0.72s ease-out forwards;
+}
+
+@keyframes kb-dust {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.95;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+.impact-badge {
+  position: absolute;
+  left: 50%;
+  top: -24px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  background: rgba(10, 12, 18, 0.88);
+  border: 1px solid var(--c);
+  border-radius: 3px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+  white-space: nowrap;
+  animation: kb-badge-pop 0.4s cubic-bezier(0.18, 1.25, 0.35, 1) both;
+}
+
+@keyframes kb-badge-pop {
+  from {
+    transform: translateX(-50%) translateY(10px) scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.impact-badge .ib-p {
+  font-size: 8.5px;
+  font-weight: 900;
+  color: #12100c;
+  background: var(--c);
+  padding: 0 3px;
+  border-radius: 2px;
+}
+
+.impact-badge .ib-val {
+  font-family: var(--display);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--paper);
+}

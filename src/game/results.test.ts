@@ -56,3 +56,40 @@ describe("computeResults (blind)", () => {
     expect(r.winnerIds.size).toBe(0);
   });
 });
+
+describe("computeResults (stack)", () => {
+  const tower = (height: number, status: "climbing" | "fallen" | "summit", finishedAtMs: number | null = null) => ({
+    rows: Array.from({ length: height }, () => ({ x: 0, width: 1 })),
+    status,
+    finishedAtMs,
+  });
+
+  it("ranks summiters by speed ahead of everyone else, then by height", () => {
+    const r = computeResults({
+      mode: "stack",
+      players,
+      counts: [],
+      strikeTimes: [],
+      stacks: [tower(11, "summit", 20_000), tower(11, "summit", 15_000), tower(7, "fallen", 9_000), tower(4, "climbing")],
+    });
+    expect([0, 1, 2, 3].map((i) => r.byPlayer[i].rank)).toEqual([2, 1, 3, 4]);
+    expect([...r.winnerIds]).toEqual([1]);
+    expect(r.byPlayer[1].scoreLabel).toBe("Summit in 15.00s");
+    expect(r.byPlayer[2].scoreLabel).toBe("Height 7/11");
+  });
+
+  it("shares a rank on equal height and has no winner when nobody stacked", () => {
+    const tied = computeResults({
+      mode: "stack", players, counts: [], strikeTimes: [],
+      stacks: [tower(5, "fallen", 1), tower(5, "climbing"), tower(2, "fallen", 1), tower(0, "fallen", 1)],
+    });
+    expect([0, 1, 2, 3].map((i) => tied.byPlayer[i].rank)).toEqual([1, 1, 3, 4]);
+
+    const none = computeResults({
+      mode: "stack", players, counts: [], strikeTimes: [],
+      stacks: [tower(0, "fallen", 1), tower(0, "fallen", 1), tower(0, "fallen", 1), tower(0, "fallen", 1)],
+    });
+    expect(none.winnerIds.size).toBe(0);
+    expect(none.byPlayer[0].rankLabel).toBe("NO BLOCKS");
+  });
+});

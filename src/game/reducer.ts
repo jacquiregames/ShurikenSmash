@@ -1,13 +1,17 @@
-import { COUNTDOWN_START, GAME_MS, MAX_PLAYERS, MAX_VISIBLE_HITS, RESULTS_INPUT_LOCK_MS } from "./config";
-import type { GameMode, Hit, Ninja, NinjaColor, Phase, PlayerCount } from "./types";
+import { COUNTDOWN_START, MAX_PLAYERS, MAX_VISIBLE_HITS, RESULTS_INPUT_LOCK_MS, ROUND_MS } from "./config";
+import type { GameMode, Hit, Ninja, NinjaColor, Phase, PlayerCount, StackPlayer } from "./types";
 import { assignColor, DEFAULT_NINJAS } from "./ninjas";
-
-function unit(seed: number): number {
-  let t = (seed + 0x6d2b79f5) | 0;
-  t = Math.imul(t ^ (t >>> 15), t | 1);
-  t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-}
+import { unit } from "./random";
+import {
+  MAX_ACTIVE_BURSTS,
+  MAX_CATCH_UP_MOVES,
+  STACK_ROWS,
+  advanceBlock,
+  createStackPlayer,
+  newMovingBlock,
+  overlapWith,
+  speedForRows,
+} from "./stack";
 
 function createHit(seq: number): Hit {
   return {
@@ -29,6 +33,8 @@ export interface GameState {
   strikeTimes: (number | undefined)[];
   pulses: number[];
   hits: Hit[][];
+  /** Shinobi Stack towers, one per seat. */
+  stacks: StackPlayer[];
   hitSeq: number;
   videosDone: boolean[];
   resultsShownAt: number;
@@ -46,6 +52,8 @@ export type GameAction =
   | { type: "video_timeout" }
   | { type: "show_results"; at: number }
   | { type: "hit_done"; playerId: number; hitId: number }
+  | { type: "stack_tick"; at: number }
+  | { type: "burst_done"; playerId: number; burstId: number }
   | { type: "return_to_menu" }
   | { type: "key_down"; code: string; at: number };
 
@@ -66,6 +74,7 @@ function roundState() {
     strikeTimes: filled<number | undefined>(undefined),
     pulses: filled(0),
     hits: Array.from({ length: MAX_PLAYERS }, (): Hit[] => []),
+    stacks: Array.from({ length: MAX_PLAYERS }, createStackPlayer),
     videosDone: filled(false),
     resultsShownAt: 0,
   };
@@ -88,15 +97,93 @@ function replaceAt<T>(list: readonly T[], index: number, update: (value: T) => T
 }
 
 function startRound(state: GameState): GameState {
+  // Kunai Bullseye runs its own rounds, countdown and results inside its component.
+  if (state.mode === "kunai") return { ...state, ...roundState(), phase: "kunai" };
   return { ...state, ...roundState(), phase: "countdown", countdown: COUNTDOWN_START };
 }
 
 function endRound(state: GameState): GameState {
+  // Stack rounds skip the win/lose videos so players can study their towers.
+  if (state.mode === "stack") return { ...state, phase: "ended" };
   return {
     ...state,
     phase: "video",
     videosDone: Array.from({ length: MAX_PLAYERS }, (_, i) => i >= state.numPlayers),
   };
+}
+
+/** Locks the climbing block of `id` onto its tower (or topples the tower). */
+function dropBlock(state: GameState, id: number, at: number, elapsed: number): GameState {
+  const player = state.stacks[id];
+  if (!player || player.status !== "climbing") return state;
+
+  // The first block always lands; later blocks are trimmed to the overlap.
+  const top = player.rows[player.rows.length - 1];
+  const placed = top ? overlapWith(player.current, top) : { x: player.current.x, width: player.current.width };
+
+  const hitSeq = state.hitSeq + 1;
+  let next: StackPlayer;
+  if (!placed) {
+    next = { ...player, status: "fallen", finishedAtMs: elapsed };
+  } else {
+    const rows = [...player.rows, placed];
+    const bursts = [
+      ...player.bursts.slice(-(MAX_ACTIVE_BURSTS - 1)),
+      { id: hitSeq, cx: placed.x + placed.width / 2, level: rows.length - 1 },
+    ];
+    next =
+      rows.length >= STACK_ROWS
+        ? { ...player, rows, bursts, status: "summit", finishedAtMs: elapsed }
+        : {
+            ...player,
+            rows,
+            bursts,
+            current: newMovingBlock(placed.width),
+            nextMoveAt: at + speedForRows(rows.length),
+          };
+  }
+
+  const stacks = replaceAt(state.stacks, id, () => next);
+  const updated: GameState = {
+    ...state,
+    hitSeq,
+    stacks,
+    pulses: replaceAt(state.pulses, id, (n) => n + 1),
+  };
+  const everyoneDone = state.ninjas
+    .slice(0, state.numPlayers)
+    .every((p) => stacks[p.id].status !== "climbing");
+  return everyoneDone ? endRound(updated) : updated;
+}
+
+/** Advances every climbing player's moving block that is due. */
+function advanceStacks(state: GameState, at: number): GameState {
+  if (state.phase !== "playing" || state.mode !== "stack") return state;
+
+  let changed = false;
+  const stacks = state.stacks.map((p, i) => {
+    if (i >= state.numPlayers || p.status !== "climbing" || at < p.nextMoveAt) return p;
+    let { current, nextMoveAt } = p;
+    const interval = speedForRows(p.rows.length);
+    for (let n = 0; n < MAX_CATCH_UP_MOVES && at >= nextMoveAt; n++) {
+      current = advanceBlock(current);
+      nextMoveAt += interval;
+    }
+    if (at >= nextMoveAt) nextMoveAt = at + interval; // resync after a long stall
+    changed = true;
+    return { ...p, current, nextMoveAt };
+  });
+  return changed ? { ...state, stacks } : state;
+}
+
+/** When the next stack block is due to move (`null` if nothing is moving). */
+export function nextStackDue(state: GameState): number | null {
+  if (state.phase !== "playing" || state.mode !== "stack") return null;
+  let due: number | null = null;
+  for (const p of state.stacks.slice(0, state.numPlayers)) {
+    if (p.status === "climbing" && (due === null || p.nextMoveAt < due)) due = p.nextMoveAt;
+  }
+  return due;
 }
 
 function strike(state: GameState, code: string, at: number): GameState {
@@ -107,7 +194,8 @@ function strike(state: GameState, code: string, at: number): GameState {
   if (!player) return state;
 
   const elapsed = Math.max(0, at - state.startedAt);
-  if (elapsed >= GAME_MS) return state;
+  if (elapsed >= ROUND_MS[state.mode]) return state;
+  if (state.mode === "stack") return dropBlock(state, player.id, at, elapsed);
 
   const id = player.id;
   if (state.mode === "blind" && state.strikeTimes[id] !== undefined) return state;
@@ -127,7 +215,7 @@ function strike(state: GameState, code: string, at: number): GameState {
     return { ...next, counts: replaceAt(state.counts, id, (n) => n + 1) };
   }
 
-  const strikeTimes = replaceAt(state.strikeTimes, id, () => (GAME_MS - elapsed) / 1000);
+  const strikeTimes = replaceAt(state.strikeTimes, id, () => (ROUND_MS.blind - elapsed) / 1000);
   const updated = { ...next, strikeTimes };
   return players.every((p) => strikeTimes[p.id] !== undefined) ? endRound(updated) : updated;
 }
@@ -172,7 +260,12 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         : state;
     case "begin_play":
       return state.phase === "countdown" && state.countdown === 0
-        ? { ...state, phase: "playing", startedAt: action.at }
+        ? {
+            ...state,
+            phase: "playing",
+            startedAt: action.at,
+            stacks: state.stacks.map((p) => ({ ...p, nextMoveAt: action.at + speedForRows(0) })),
+          }
         : state;
     case "time_up":
       return state.phase === "playing" ? endRound(state) : state;
@@ -197,8 +290,21 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         hits: replaceAt(state.hits, action.playerId, (l) => l.filter((h) => h.id !== action.hitId)),
       };
     }
+    case "stack_tick":
+      return advanceStacks(state, action.at);
+    case "burst_done": {
+      const stack = state.stacks[action.playerId];
+      if (!stack?.bursts.some((b) => b.id === action.burstId)) return state;
+      return {
+        ...state,
+        stacks: replaceAt(state.stacks, action.playerId, (p) => ({
+          ...p,
+          bursts: p.bursts.filter((b) => b.id !== action.burstId),
+        })),
+      };
+    }
     case "return_to_menu":
-      return state.phase === "results" ? { ...state, phase: "menu" } : state;
+      return state.phase === "results" || state.phase === "kunai" ? { ...state, phase: "menu" } : state;
     case "key_down":
       return handleKey(state, action.code, action.at);
   }

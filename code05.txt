@@ -1,0 +1,654 @@
+--- File: ./src/kunai/KunaiGame.tsx ---
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import type { Ninja } from "../game/types";
+import AimLane from "./components/AimLane";
+import Arena from "./components/Arena";
+import Backdrop from "./components/Backdrop";
+import GameOver from "./components/GameOver";
+import Scoreboard from "./components/Scoreboard";
+import { SoundOff, SoundOn } from "./components/Icons";
+import { ROUNDS, SPEED, buildKunaiPlayers } from "./game/config";
+import { useEngine } from "./game/useEngine";
+import { PlayersContext } from "./players";
+import "./kunai.css";
+
+const PHASE_TAG: Record<string, string> = {
+  title: "GET READY",
+  countdown: "READY",
+  live: "THROW!",
+  roundEnd: "ROUND OVER",
+  gameOver: "MATCH OVER",
+};
+
+interface KunaiGameProps {
+  /** The ninjas playing this match (3 or 4), in seat order. */
+  ninjas: readonly Ninja[];
+  /** Logo shown in the top bar. */
+  logoSrc: string;
+  logoAlt: string;
+  /** Called when the players quit (Esc / close button / "Back to menu"). */
+  onExit: () => void;
+}
+
+/** Kunai Bullseye: a self-contained 3-4 player accuracy duel. Starts as soon as it mounts. */
+export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGameProps) {
+  // The roster is fixed for the life of the match, so keep one stable snapshot.
+  const [players] = useState(() => buildKunaiPlayers(ninjas));
+  const keyToPlayer = useMemo(
+    () => Object.fromEntries(players.map((p, i) => [p.key, i] as const)) as Record<string, number>,
+    [players]
+  );
+
+  const engine = useEngine(players);
+  const {
+    phase,
+    round,
+    count,
+    runs,
+    history,
+    totals,
+    winners,
+    winReason,
+    banner,
+    callout,
+    shakeId,
+    pulseId,
+    muted,
+    setMarkerEl,
+    fuseRef,
+    fuseFillRef,
+    fuseValRef,
+    press,
+    start,
+    restart,
+    toggleMute,
+  } = engine;
+
+  // No title screen: the menu is the title screen, so the match begins immediately.
+  useEffect(() => {
+    start();
+  }, [start]);
+
+  /* ---- one keyboard, three or four shinobi ---- */
+  useEffect(() => {
+    const onKey = (ev: KeyboardEvent) => {
+      const k = ev.key.toLowerCase();
+      if (k === " " || k === "spacebar" || k === "enter") ev.preventDefault();
+      if (ev.repeat) return;
+
+      if (phase === "gameOver") {
+        if (k === " " || k === "spacebar" || k === "enter" || k === "r") restart();
+        else if (k === "escape") onExit();
+        else if (k === "m") toggleMute();
+        return;
+      }
+      const idx = keyToPlayer[k];
+      if (idx !== undefined) {
+        press(idx);
+        return;
+      }
+      if (k === "m") toggleMute();
+      else if (k === "escape") onExit();
+      else if (k === "r" && phase !== "live") restart();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [phase, keyToPlayer, press, restart, onExit, toggleMute]);
+
+  const soundBtn = (
+    <button
+      type="button"
+      className={`icon-btn${muted ? " off" : ""}`}
+      onClick={toggleMute}
+      title={muted ? "Unmute Sound (M)" : "Mute Sound (M)"}
+      aria-label={muted ? "Unmute Sound" : "Mute Sound"}
+    >
+      {muted ? <SoundOff /> : <SoundOn />}
+    </button>
+  );
+
+  const speedMultiplier = (SPEED[round - 1] / SPEED[0]).toFixed(2);
+
+  return (
+    <PlayersContext.Provider value={players}>
+      <div className="kb-root">
+        <Backdrop />
+        <div className="shell">
+          <header className="topbar">
+            <div className="brand">
+              <img className="brand-logo" src={logoSrc} alt={logoAlt} draggable={false} />
+            </div>
+
+            <div className="topmid">
+              <div className="round-pips">
+                {Array.from({ length: ROUNDS }, (_, i) => {
+                  const n = i + 1;
+                  const cls = n < round ? "pip done" : n === round ? "pip is-active" : "pip";
+                  return (
+                    <div className={cls} key={n} title={`Round ${n}: ${(SPEED[i] / SPEED[0]).toFixed(2)}x speed`}>
+                      <span className="n">{["一", "二", "三"][i]}</span>
+                      <span className="l">ROUND {n}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="phase-tag">
+                {PHASE_TAG[phase]}{" "}
+                {phase === "live" || phase === "countdown" ? (
+                  <b>
+                    · {round}/{ROUNDS} ({speedMultiplier}×)
+                  </b>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="topright">
+              <div className="hint-keys" title="Throw your kunai with your key">
+                KEYS:
+                {players.map((p) => (
+                  <span
+                    className="tiny-cap"
+                    key={p.id}
+                    style={{ color: p.color, borderColor: `${p.color}88`, background: `${p.color}18` }}
+                    title={`${p.label} (${p.name}): key [${p.key.toUpperCase()}]`}
+                  >
+                    {p.key.toUpperCase()}
+                  </span>
+                ))}
+              </div>
+              {soundBtn}
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={restart}
+                title="Restart Match (R)"
+                aria-label="Restart Match"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                  <path d="M3 3v5h5" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                className="icon-btn"
+                onClick={onExit}
+                title="Back to Menu (Esc)"
+                aria-label="Back to Menu"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
+          </header>
+
+          <div className="stage">
+            <Scoreboard runs={runs} history={history} winners={winners} round={round} />
+            <Arena
+              runs={runs}
+              phase={phase}
+              round={round}
+              count={count}
+              banner={banner}
+              callout={callout}
+              shakeId={shakeId}
+              pulseId={pulseId}
+              fuseRef={fuseRef}
+              fuseFillRef={fuseFillRef}
+              fuseValRef={fuseValRef}
+            />
+          </div>
+
+          <div className="lanes" style={{ "--np": players.length } as CSSProperties}>
+            {players.map((p, i) => (
+              <AimLane
+                key={p.id}
+                index={i}
+                run={runs[i]}
+                phase={phase}
+                setMarkerEl={setMarkerEl}
+                onPress={press}
+              />
+            ))}
+          </div>
+
+          <p className="sr" aria-live="polite">
+            {runs
+              .map((r, i) =>
+                r.status === "landed"
+                  ? `${players[i].label} ${r.bull ? "bullseye" : `${r.cm.toFixed(1)} centimetres off`}, ${r.points} points. `
+                  : ""
+              )
+              .join("")}
+          </p>
+        </div>
+
+        {phase === "gameOver" && winners && winReason && (
+          <GameOver
+            winners={winners}
+            reason={winReason}
+            history={history}
+            totals={totals}
+            onRematch={restart}
+            onTitle={onExit}
+          />
+        )}
+      </div>
+    </PlayersContext.Provider>
+  );
+}
+--- File: ./src/kunai/players.ts ---
+import { createContext, useContext } from "react";
+import type { KunaiPlayer } from "./game/config";
+
+/** The seats in the current match (3 or 4), shared by every Kunai component. */
+export const PlayersContext = createContext<readonly KunaiPlayer[]>([]);
+
+export const usePlayers = () => useContext(PlayersContext);
+
+--- File: ./src/main.tsx ---
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "@fontsource/bangers";
+import "@fontsource/rajdhani/500.css";
+import "@fontsource/rajdhani/700.css";
+import App from "./App.tsx";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <App />
+  </StrictMode>
+);
+
+--- File: ./src/App.css ---
+@import "./styles/arena.css";
+@import "./styles/game.css";
+@import "./styles/global.css";
+@import "./styles/panels.css"; 
+@import "./styles/stack.css";
+
+--- File: ./src/App.tsx ---
+import { useMemo } from "react";
+import { MODE_DETAILS, ROUND_MS, getOutcomeVideoUrl, getImageUrl } from "./game/config";
+import { computeResults } from "./game/results";
+import { useGame } from "./hooks/useGame";
+import { Timer } from "./components/Timer";
+import { PlayerCard } from "./components/PlayerCard";
+import { MenuPanel } from "./components/MenuPanel";
+import KunaiGame from "./kunai/KunaiGame";
+import "./App.css";
+
+export default function App() {
+  const { state, clock, actions } = useGame();
+  const { phase, mode, numPlayers, ninjas, countdown, counts, strikeTimes, pulses, hits, stacks } = state;
+
+  const players = useMemo(() => ninjas.slice(0, numPlayers), [ninjas, numPlayers]);
+  const isRoundOver = phase === "video" || phase === "ended" || phase === "results";
+
+  const results = useMemo(
+    () => (isRoundOver ? computeResults({ mode, players, counts, strikeTimes, stacks }) : null),
+    [isRoundOver, mode, players, counts, strikeTimes, stacks]
+  );
+
+  const activeCounts = counts.slice(0, numPlayers);
+  const topScore = Math.max(...activeCounts);
+  const maxCount = Math.max(1, topScore);
+  const leadersCount = activeCounts.filter((c) => c === topScore).length;
+
+  // Kunai Bullseye is a self-contained game: it replaces the whole screen until players exit.
+  if (phase === "kunai") {
+    return (
+      <KunaiGame
+        ninjas={players}
+        logoSrc={MODE_DETAILS.kunai.logoImage}
+        logoAlt={MODE_DETAILS.kunai.title}
+        onExit={actions.returnToMenu}
+      />
+    );
+  }
+
+  return (
+    <div className={`game phase-${phase}`}>
+      <div
+        className="bg"
+        aria-hidden="true"
+        style={{ backgroundImage: `url("${getImageUrl("background")}")` }}
+      />
+
+      <header className="title-bar">
+        <img
+          src={MODE_DETAILS[mode].logoImage}
+          alt={MODE_DETAILS[mode].title}
+          className="header-logo"
+        />
+      </header>
+
+      {phase === "menu" && (
+        <MenuPanel
+          mode={mode}
+          numPlayers={numPlayers}
+          players={players}
+          onSelectMode={actions.selectMode}
+          onSelectNumPlayers={actions.selectPlayerCount}
+          onSelectPlayerColor={actions.selectColor}
+          onStartGame={actions.start}
+        />
+      )}
+
+      {phase !== "menu" && (
+        <>
+          <Timer phase={phase} mode={mode} clock={clock} durationMs={ROUND_MS[mode]} />
+
+          <div className={`arena players-${numPlayers}`}>
+            {players.map((p) => {
+              const count = counts[p.id];
+              const isLocked = mode === "blind" && strikeTimes[p.id] !== undefined;
+              const isLeading =
+                mode === "mash" &&
+                phase === "playing" &&
+                count > 0 &&
+                count === topScore &&
+                leadersCount === 1;
+
+              const outcome =
+                results && mode !== "stack" ? (results.winnerIds.has(p.id) ? "win" : "lose") : undefined;
+              const videoUrl =
+                phase === "video" && outcome
+                  ? getOutcomeVideoUrl(p.colorName, outcome)
+                  : undefined;
+
+              return (
+                <PlayerCard
+                  key={p.id}
+                  player={p}
+                  mode={mode}
+                  count={count}
+                  maxCount={maxCount}
+                  isLeading={isLeading}
+                  pulseId={pulses[p.id]}
+                  hits={hits[p.id]}
+                  stack={stacks[p.id]}
+                  lockedTime={strikeTimes[p.id]}
+                  isLocked={isLocked}
+                  outcome={outcome}
+                  videoUrl={videoUrl}
+                  result={phase === "results" ? results?.byPlayer[p.id] : undefined}
+                  onVideoEnd={actions.videoEnded}
+                  onHitDone={actions.hitDone}
+                  onBurstDone={actions.burstDone}
+                />
+              );
+            })}
+          </div>
+
+          {phase === "countdown" && (
+            <div className="countdown-overlay" aria-live="assertive">
+              <div className="countdown-num" key={countdown}>
+                {countdown > 0 ? countdown : "STRIKE!"}
+              </div>
+            </div>
+          )}
+
+          {phase === "results" && (
+            <div className="results-action-bar">
+              <div className="results-buttons">
+                <button
+                  type="button"
+                  className="ghost-btn"
+                  onClick={actions.returnToMenu}
+                  aria-label="Return to Dojo"
+                >
+                  <img
+                    src={getImageUrl("continue")}
+                    alt=""
+                    className="ghost-btn-img"
+                  />
+                </button>
+              </div>
+              <p className="hint">Press ENTER to return to the Dojo</p>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+--- File: ./src/hooks/useGame.ts ---
+import { useEffect, useMemo, useReducer, useState } from "react";
+import {
+  COUNTDOWN_GO_MS,
+  ENDED_HOLD_MS,
+  ROUND_MS,
+  VIDEO_FALLBACK_MS,
+  getOutcomeImageUrl,
+  getOutcomeVideoUrl,
+  usesOutcomeMedia,
+} from "../game/config";
+import type { Clock, GameMode, NinjaColor, Outcome, PlayerCount } from "../game/types";
+import { createInitialState, gameReducer, nextStackDue } from "../game/reducer";
+
+function createClock(initial: number): Clock {
+  let value = initial;
+  const listeners = new Set<() => void>();
+
+  return {
+    getSnapshot: () => value,
+    subscribe: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
+    set: (next) => {
+      if (next === value) return;
+      value = next;
+      listeners.forEach((listener) => listener());
+    },
+  };
+}
+
+/** True when the event target is a control that Enter/Space would activate. */
+function isActivatableControl(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    target.matches("button, a, input, select, textarea, [role='button']")
+  );
+}
+
+export function useGame() {
+  const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
+  const [clock] = useState(() => createClock(ROUND_MS.mash));
+  const { phase, mode, countdown, startedAt, ninjas, numPlayers } = state;
+  const stackDue = nextStackDue(state);
+
+  const actions = useMemo(
+    () => ({
+      selectMode: (mode: GameMode) => dispatch({ type: "select_mode", mode }),
+      selectPlayerCount: (count: PlayerCount) => dispatch({ type: "select_player_count", count }),
+      selectColor: (playerId: number, color: NinjaColor) =>
+        dispatch({ type: "select_color", playerId, color }),
+      start: () => dispatch({ type: "start" }),
+      returnToMenu: () => dispatch({ type: "return_to_menu" }),
+      videoEnded: (playerId: number) => dispatch({ type: "video_ended", playerId }),
+      hitDone: (playerId: number, hitId: number) =>
+        dispatch({ type: "hit_done", playerId, hitId }),
+      burstDone: (playerId: number, burstId: number) =>
+        dispatch({ type: "burst_done", playerId, burstId }),
+    }),
+    []
+  );
+
+  // Outcome asset preloading. Keyed on "is a match active" (not `phase`) so the
+  // downloads are not cancelled and restarted on every phase change.
+  const isMatchActive = phase !== "menu";
+  useEffect(() => {
+    // Only Shuriken Smash and Shadow Strike use the win/lose media.
+    if (!isMatchActive || !usesOutcomeMedia(mode)) return;
+    const activeNinjas = ninjas.slice(0, numPlayers);
+    const OUTCOMES: readonly Outcome[] = ["win", "lose"];
+    const videos: HTMLVideoElement[] = [];
+
+    for (const { colorName } of activeNinjas) {
+      for (const outcome of OUTCOMES) {
+        new Image().src = getOutcomeImageUrl(colorName, outcome);
+
+        const video = document.createElement("video");
+        video.preload = "auto";
+        video.muted = true;
+        video.src = getOutcomeVideoUrl(colorName, outcome);
+        videos.push(video);
+      }
+    }
+
+    return () => {
+      for (const video of videos) {
+        video.removeAttribute("src");
+        video.load();
+      }
+    };
+  }, [isMatchActive, mode, ninjas, numPlayers]);
+
+  // Global keyboard handler. Enter/Space start the game unless the user is
+  // Tab-navigating, in which case they activate the focused button. (A mouse
+  // click also focuses a button, so :focus-visible alone can't tell the two apart.)
+  useEffect(() => {
+    let tabNavigating = false;
+    const onPointerDown = () => {
+      tabNavigating = false;
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Tab") tabNavigating = true;
+      if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      const isConfirm = e.code === "Enter" || e.code === "NumpadEnter" || e.code === "Space";
+      if (isConfirm && tabNavigating && isActivatableControl(e.target)) return;
+      dispatch({ type: "key_down", code: e.code, at: e.timeStamp });
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
+  // Countdown Loop
+  useEffect(() => {
+    if (phase !== "countdown") return;
+    clock.set(ROUND_MS[mode]);
+    const id = window.setTimeout(
+      () =>
+        countdown > 0
+          ? dispatch({ type: "countdown_tick" })
+          : dispatch({ type: "begin_play", at: performance.now() }),
+      countdown > 0 ? 1000 : COUNTDOWN_GO_MS
+    );
+    return () => window.clearTimeout(id);
+  }, [phase, mode, countdown, clock]);
+
+  // Game Play Loop
+  useEffect(() => {
+    if (phase !== "playing" || startedAt === null) return;
+    const duration = ROUND_MS[mode];
+    let raf = 0;
+    const tick = (now: number) => {
+      const left = Math.min(duration, Math.max(0, duration - (now - startedAt)));
+      clock.set(left);
+      if (left === 0) {
+        dispatch({ type: "time_up" });
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [phase, mode, startedAt, clock]);
+
+  // Shinobi Stack: wake up exactly when the next block is due to move.
+  //
+  // This effect only re-runs when `stackDue` changes, and `stackDue` only changes
+  // when a block actually moves. Timers can fire a hair early relative to
+  // performance.now(); if we reported that earlier time, the reducer would see
+  // "not due yet", return the same state, React would bail out, and nothing would
+  // ever re-arm this timer, freezing the blocks. Clamping `at` to at least
+  // `stackDue` guarantees the reducer makes progress, which changes `stackDue`
+  // and re-arms the timer.
+  useEffect(() => {
+    if (stackDue === null) return;
+    const id = window.setTimeout(
+      () => dispatch({ type: "stack_tick", at: Math.max(performance.now(), stackDue) }),
+      Math.max(0, stackDue - performance.now())
+    );
+    return () => window.clearTimeout(id);
+  }, [stackDue]);
+
+  // Video fallback safety timer
+  useEffect(() => {
+    if (phase !== "video") return;
+    const id = window.setTimeout(() => dispatch({ type: "video_timeout" }), VIDEO_FALLBACK_MS);
+    return () => window.clearTimeout(id);
+  }, [phase]);
+
+  // Post-round hold before showing results
+  useEffect(() => {
+    if (phase !== "ended") return;
+    const id = window.setTimeout(
+      () => dispatch({ type: "show_results", at: performance.now() }),
+      ENDED_HOLD_MS
+    );
+    return () => window.clearTimeout(id);
+  }, [phase]);
+
+  return { state, clock, actions };
+}
+
+--- File: ./index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mash</title>
+    <!-- Display + body fonts for Kunai Bullseye -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Shippori+Mincho+B1:wght@600;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+--- File: ./tsconfig.app.json ---
+{
+  "compilerOptions": {
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "target": "es2023",
+    "lib": ["ES2023", "DOM"],
+    "module": "esnext",
+    "types": ["vite/client"],
+    "allowArbitraryExtensions": true,
+    "skipLibCheck": true,
+
+    /* Bundler mode */
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "moduleDetection": "force",
+    "noEmit": true,
+    "jsx": "react-jsx",
+
+    /* Linting */
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "erasableSyntaxOnly": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": ["src"]
+}
+

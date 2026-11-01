@@ -1,11 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { GAME_MS, RESULTS_INPUT_LOCK_MS } from "./config";
+import { RESULTS_INPUT_LOCK_MS, ROUND_MS, usesOutcomeMedia } from "./config";
 import { assignColor, DEFAULT_NINJAS } from "./ninjas";
-import { createInitialState, gameReducer, type GameAction, type GameState } from "./reducer";
+import { createInitialState, gameReducer, nextStackDue, type GameAction, type GameState } from "./reducer";
+import type { GameMode } from "./types";
 
 const run = (state: GameState, ...actions: GameAction[]) => actions.reduce(gameReducer, state);
 
-function playing(mode: "mash" | "blind" = "mash", startedAt = 1000): GameState {
+function playing(mode: GameMode = "mash", startedAt = 1000): GameState {
   let s = createInitialState();
   s = run(s, { type: "select_mode", mode }, { type: "start" });
   s = run(s, { type: "countdown_tick" }, { type: "countdown_tick" }, { type: "countdown_tick" });
@@ -42,7 +43,7 @@ describe("mash", () => {
   });
 
   it("ignores presses after time has elapsed", () => {
-    const s = run(playing(), { type: "key_down", code: "KeyA", at: 1000 + GAME_MS });
+    const s = run(playing(), { type: "key_down", code: "KeyA", at: 1000 + ROUND_MS.mash });
     expect(s.counts[0]).toBe(0);
   });
 
@@ -90,8 +91,63 @@ describe("round flow", () => {
     ).toBe("menu");
   });
 
+  it("stack rounds skip the videos and go straight to the ended phase", () => {
+    expect(run(playing("stack"), { type: "time_up" }).phase).toBe("ended");
+  });
+
+  it("mash rounds still play the videos", () => {
+    expect(run(playing("mash"), { type: "time_up" }).phase).toBe("video");
+  });
+
   it("Escape aborts to the menu", () => {
     expect(run(playing(), { type: "key_down", code: "Escape", at: 0 }).phase).toBe("menu");
+  });
+});
+
+describe("kunai bullseye", () => {
+  const kunaiMenu = () => run(createInitialState(), { type: "select_mode", mode: "kunai" });
+
+  it("starts straight into the self-contained kunai phase (no countdown/videos)", () => {
+    const s = run(kunaiMenu(), { type: "start" });
+    expect(s.phase).toBe("kunai");
+    expect(s.mode).toBe("kunai");
+  });
+
+  it("also starts from the Enter key on the menu", () => {
+    expect(run(kunaiMenu(), { type: "key_down", code: "Enter", at: 0 }).phase).toBe("kunai");
+  });
+
+  it("ignores throw keys, ticks and timeouts while kunai is running", () => {
+    const s = run(kunaiMenu(), { type: "start" });
+    for (const a of [
+      { type: "key_down", code: "KeyA", at: 10 },
+      { type: "stack_tick", at: 10 },
+      { type: "time_up" },
+      { type: "video_timeout" },
+      { type: "show_results", at: 10 },
+    ] as GameAction[]) {
+      expect(run(s, a)).toBe(s);
+    }
+  });
+
+  it("returns to the menu from Escape or the exit action, keeping the chosen mode", () => {
+    const s = run(kunaiMenu(), { type: "start" });
+    expect(run(s, { type: "key_down", code: "Escape", at: 0 }).phase).toBe("menu");
+    const back = run(s, { type: "return_to_menu" });
+    expect(back.phase).toBe("menu");
+    expect(back.mode).toBe("kunai");
+  });
+
+  it("keeps the 3/4 player choice for the match", () => {
+    const s = run(kunaiMenu(), { type: "select_player_count", count: 3 }, { type: "start" });
+    expect(s.numPlayers).toBe(3);
+  });
+
+  it("never uses the win/lose media", () => {
+    expect(usesOutcomeMedia("kunai")).toBe(false);
+    expect(usesOutcomeMedia("stack")).toBe(false);
+    expect(usesOutcomeMedia("mash")).toBe(true);
+    expect(usesOutcomeMedia("blind")).toBe(true);
   });
 });
 
@@ -101,5 +157,86 @@ describe("assignColor", () => {
     expect(next[0].colorName).toBe("green");
     expect(next[1].colorName).toBe("red");
     expect(new Set(next.map((n) => n.colorName)).size).toBe(4);
+  });
+});
+
+describe("shinobi stack", () => {
+  const drop = (code: string, at: number): GameAction => ({ type: "key_down", code, at });
+
+  it("starts every tower's clock when play begins", () => {
+    const s = playing("stack");
+    expect(s.stacks[0].nextMoveAt).toBeGreaterThan(1000);
+    expect(nextStackDue(s)).toBe(s.stacks[0].nextMoveAt);
+  });
+
+  it("advances the moving block only when its tick is due", () => {
+    const s = playing("stack");
+    expect(run(s, { type: "stack_tick", at: 1000 }).stacks[0].current.x).toBe(0);
+    const moved = run(s, { type: "stack_tick", at: s.stacks[0].nextMoveAt });
+    expect(moved.stacks[0].current.x).toBe(1);
+  });
+
+  it("locks a block on drop and trims the next one to the overlap", () => {
+    let s = playing("stack");
+    s = run(s, drop("KeyA", 1100)); // first block always lands (x 0, width 3)
+    expect(s.stacks[0].rows).toEqual([{ x: 0, width: 3 }]);
+    s = run(s, { type: "stack_tick", at: s.stacks[0].nextMoveAt }); // current moves to x 1
+    s = run(s, drop("KeyA", 1300));
+    expect(s.stacks[0].rows[1]).toEqual({ x: 1, width: 2 });
+    expect(s.stacks[1].rows).toHaveLength(0); // other towers untouched
+  });
+
+  it("topples a tower that misses, and ends the round when everyone is done", () => {
+    let s = playing("stack");
+    s = run(s, drop("KeyA", 1100));
+    s = { ...s, stacks: s.stacks.map((p, i) => (i === 0 ? { ...p, current: { x: 7, width: 1, dir: -1 } } : p)) };
+    s = run(s, drop("KeyA", 1200));
+    expect(s.stacks[0].status).toBe("fallen");
+    expect(s.phase).toBe("playing");
+    for (const code of ["KeyF", "KeyH", "KeyL"]) {
+      s = { ...s, stacks: s.stacks.map((p) => (p.status === "climbing" ? { ...p, rows: [{ x: 0, width: 1 }], current: { x: 5, width: 1, dir: 1 } } : p)) };
+      s = run(s, drop(code, 1300));
+    }
+    expect(s.phase).toBe("ended");
+  });
+
+  it("stack rounds last longer than mash rounds", () => {
+    const s = playing("stack");
+    expect(run(s, drop("KeyA", 1000 + ROUND_MS.mash + 1)).stacks[0].rows).toHaveLength(1);
+    expect(run(s, drop("KeyA", 1000 + ROUND_MS.stack)).stacks[0].rows).toHaveLength(0);
+  });
+
+  it("removes a burst once its animation ends", () => {
+    let s = run(playing("stack"), drop("KeyA", 1100));
+    const id = s.stacks[0].bursts[0].id;
+    s = run(s, { type: "burst_done", playerId: 0, burstId: id });
+    expect(s.stacks[0].bursts).toHaveLength(0);
+  });
+
+  // Regression: the hook's timer must always make progress, otherwise the
+  // effect keyed on nextStackDue never re-arms and the blocks freeze.
+  it("ignores a tick that fires before the due time (same state, so no re-render)", () => {
+    const s = playing("stack");
+    const due = nextStackDue(s)!;
+    expect(run(s, { type: "stack_tick", at: due - 0.5 })).toBe(s);
+  });
+
+  it("always changes the next due time when ticked at exactly the due time", () => {
+    const s = playing("stack");
+    const due = nextStackDue(s)!;
+    const next = run(s, { type: "stack_tick", at: due });
+    expect(next).not.toBe(s);
+    expect(nextStackDue(next)).toBeGreaterThan(due);
+  });
+
+  it("keeps making progress across many consecutive due-time ticks", () => {
+    let s = playing("stack");
+    for (let i = 0; i < 50; i++) {
+      const due = nextStackDue(s);
+      expect(due).not.toBeNull();
+      const next = run(s, { type: "stack_tick", at: due! });
+      expect(nextStackDue(next)).toBeGreaterThan(due!);
+      s = next;
+    }
   });
 });
