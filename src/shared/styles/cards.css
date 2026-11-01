@@ -103,7 +103,7 @@
 
 .card-name {
   font-family: var(--font-name);
-  font-size: clamp(1.4rem, 2.5vw, 2.1rem);
+  font-size: clamp(3rem, 3vw, 4rem);
   line-height: 1.1;
   letter-spacing: 0.04em;
   color: var(--c);
