@@ -1,0 +1,67 @@
+.timer-wrap {
+  position: relative;
+  z-index: 2;
+  width: min(700px, 90vw);
+  text-align: center;
+  margin: 1vh 0 2vh;
+}
+
+.timer-text {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  line-height: 1;
+  color: #fff;
+  text-shadow: 0 0 20px #ffc93c;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-bar {
+  height: 14px;
+  margin-top: 0.5rem;
+  background: rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 7px;
+  overflow: hidden;
+}
+
+.timer-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #ffc93c, #ff8a3c);
+  box-shadow: 0 0 15px #ffc93c;
+}
+
+.timer-fill.danger {
+  background: linear-gradient(90deg, #ff3b4e, #ff0040);
+  box-shadow: 0 0 20px #ff3b4e;
+  animation: danger 0.4s infinite alternate;
+}
+
+@keyframes danger {
+  to {
+    opacity: 0.6;
+  }
+}
+
+.timer-text.blind-hidden {
+  color: #ff3b4e;
+  letter-spacing: 0.15em;
+  animation: blindPulse 1s ease-in-out infinite alternate;
+}
+
+@keyframes blindPulse {
+  from {
+    opacity: 0.3;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+}
+
+.timer-fill.timer-hidden {
+  opacity: 0;
+  box-shadow: none;
+  animation: none;
+  transition: opacity 0.3s;
+}
