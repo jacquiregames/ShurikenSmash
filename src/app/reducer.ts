@@ -6,7 +6,7 @@ import { DEFAULT_NINJAS, assignColor } from "../shared/game/ninjas";
 import type { GameMode, NinjaColor, PlayerCount } from "../shared/game/types";
 import { blindStrike, everyoneStruck, hasStruck, initialBlindRound } from "../modes/blind/logic";
 import { initialMashRound, mashStrike } from "../modes/mash/logic";
-import { roundMsFor } from "../modes/registry";
+import { roundMsFor, usesOutcomeMedia } from "../modes/registry";
 import {
   advanceTowers,
   dropBlock,
@@ -106,8 +106,26 @@ function startRound(state: GameState): GameState {
 }
 
 function endRound(state: GameState): GameState {
-  // Stack rounds skip the win/lose videos so players can study their towers.
   if (state.mode === "stack") return { ...state, phase: "ended" };
+
+  // Blind mode: wait for any active hit videos to finish playing
+  if (state.mode === "blind") {
+    const videosDone = Array.from({ length: MAX_PLAYERS }, (_, i) => {
+      // Inactive seats or players who never struck have no video to wait for
+      if (i >= state.numPlayers || state.blind.strikeTimes[i] === undefined) {
+        return true;
+      }
+      return state.videosDone[i];
+    });
+
+    if (videosDone.every(Boolean)) {
+      return { ...state, videosDone, phase: "ended" };
+    }
+    return { ...state, videosDone, phase: "video" };
+  }
+
+  // Modes without outcome videos skip the video phase and go straight to ended
+  if (!usesOutcomeMedia(state.mode)) return { ...state, phase: "ended" };
   return {
     ...state,
     phase: "video",
@@ -231,9 +249,8 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
         ? endRound({ ...state, tsugitashi: bustHolders(state.tsugitashi) })
         : endRound(state);
     case "video_ended": {
-      if (state.phase !== "video") return state;
       const videosDone = replaceAt(state.videosDone, action.playerId, () => true);
-      return videosDone.every(Boolean)
+      return state.phase === "video" && videosDone.every(Boolean)
         ? { ...state, videosDone, phase: "ended" }
         : { ...state, videosDone };
     }

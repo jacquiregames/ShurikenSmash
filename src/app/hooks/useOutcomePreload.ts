@@ -1,5 +1,10 @@
 import { useEffect } from "react";
-import { getOutcomeImageUrl, getOutcomeVideoUrl } from "../../shared/config/assets";
+import {
+  getBlindImageUrl,
+  getBlindVideoUrl,
+  getOutcomeImageUrl,
+  getOutcomeVideoUrl,
+} from "../../shared/config/assets";
 import type { Outcome } from "../../shared/game/types";
 import { usesOutcomeMedia } from "../../modes/registry";
 import type { GameState } from "../state";
@@ -13,17 +18,32 @@ const OUTCOMES: readonly Outcome[] = ["win", "lose"];
 export function useOutcomePreload({ phase, mode, ninjas, numPlayers }: GameState) {
   const isMatchActive = phase !== "menu";
   useEffect(() => {
-    if (!isMatchActive || !usesOutcomeMedia(mode)) return;
+    if (!isMatchActive) return;
     const videos: HTMLVideoElement[] = [];
 
-    for (const { colorName } of ninjas.slice(0, numPlayers)) {
-      for (const outcome of OUTCOMES) {
-        new Image().src = getOutcomeImageUrl(colorName, outcome);
+    if (usesOutcomeMedia(mode)) {
+      for (const { colorName } of ninjas.slice(0, numPlayers)) {
+        for (const outcome of OUTCOMES) {
+          new Image().src = getOutcomeImageUrl(colorName, outcome);
+
+          const video = document.createElement("video");
+          video.preload = "auto";
+          video.muted = true;
+          video.src = getOutcomeVideoUrl(colorName, outcome);
+          videos.push(video);
+        }
+      }
+    } else if (mode === "blind") {
+      for (const { colorName } of ninjas.slice(0, numPlayers)) {
+        new Image().src = getBlindImageUrl(colorName);
+        new Image().src = getBlindImageUrl(`${colorName}-hit`);
+        new Image().src = getBlindImageUrl(`${colorName}-win`);
+        new Image().src = getBlindImageUrl(`${colorName}-lose`);
 
         const video = document.createElement("video");
         video.preload = "auto";
         video.muted = true;
-        video.src = getOutcomeVideoUrl(colorName, outcome);
+        video.src = getBlindVideoUrl(colorName);
         videos.push(video);
       }
     }

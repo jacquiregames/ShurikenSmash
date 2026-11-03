@@ -11,7 +11,7 @@
     inset 0 0 40px rgba(0, 0, 0, 0.6);
   text-align: center;
   animation: panelIn 0.6s cubic-bezier(0.2, 1.4, 0.4, 1);
-  max-width: 1600px;
+  max-width: 1650px;
   width: 95vw;
 }
 
@@ -138,11 +138,11 @@
   cursor: pointer;
   flex: 1;
   max-width: 125px;
-  padding: 0rem 0rem;
+  padding: 0.4rem 0.6rem;
   background: rgba(255, 255, 255, 0.04);
   border: 2px solid rgba(255, 255, 255, 0.2);
   color: #f4eee0;
-  border-radius: 26px;
+  border-radius: 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -151,12 +151,12 @@
 }
 
 .select-btn:hover {
-  border-color: #00FFFF;
+  border-color: #ff3b4e;
   transform: translateY(-2px);
 }
 
 .select-btn.selected {
-  border-color: #00FFFF;
+  border-color: #ff3b4e;
   background: rgba(255, 59, 78, 0.18);
   box-shadow: 0 0 20px rgba(255, 59, 78, 0.45);
 }
@@ -213,7 +213,7 @@
 
 .player-label {
   font-family: var(--font-name);
-  font-size: 2rem;
+  font-size: 1.4rem;
   line-height: 1;
   color: var(--c);
   letter-spacing: 0.04em;
@@ -249,13 +249,6 @@
   box-shadow:
     0 0 8px #fff,
     0 0 12px currentColor;
-}
-
-.select-img {
-  display: block;
-  width: 100%;
-  height: auto;
-  pointer-events: none; /* clicks land on the button, not the image */
 }
 
 @media (max-width: 900px) {

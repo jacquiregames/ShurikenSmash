@@ -76,12 +76,14 @@ describe("blind", () => {
     expect(s.blind.strikeTimes[0]).toBeCloseTo(1, 5);
   });
 
-  it("ends the round once every active player has struck", () => {
+  it("enters video phase once every player strikes and ends once videos finish", () => {
     let s = playing("blind");
     for (const code of ["KeyA", "KeyF", "KeyH", "KeyL"]) {
       s = run(s, { type: "key_down", code, at: 5000 });
     }
     expect(s.phase).toBe("video");
+    s = run(s, ...[0, 1, 2, 3].map((playerId): GameAction => ({ type: "video_ended", playerId })));
+    expect(s.phase).toBe("ended");
   });
 });
 
@@ -156,8 +158,8 @@ describe("kunai bullseye", () => {
   it("never uses the win/lose media", () => {
     expect(usesOutcomeMedia("kunai")).toBe(false);
     expect(usesOutcomeMedia("stack")).toBe(false);
+    expect(usesOutcomeMedia("blind")).toBe(false);
     expect(usesOutcomeMedia("mash")).toBe(true);
-    expect(usesOutcomeMedia("blind")).toBe(true);
   });
 });
 

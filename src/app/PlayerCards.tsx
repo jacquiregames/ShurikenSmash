@@ -62,9 +62,13 @@ export function PlayerCards({ state, results, actions }: PlayerCardsProps) {
             return (
               <BlindCard
                 key={p.id}
-                {...media}
+                player={p}
                 lockedTime={state.blind.strikeTimes[p.id]}
+                pulseId={pulses[p.id]}
                 hits={hits[p.id]}
+                isWinner={results ? results.winnerIds.has(p.id) : undefined}
+                result={phase === "results" ? results?.byPlayer[p.id] : undefined}
+                onVideoEnd={actions.videoEnded}
                 onHitDone={actions.hitDone}
               />
             );

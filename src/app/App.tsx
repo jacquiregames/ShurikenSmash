@@ -58,10 +58,24 @@ export default function App() {
       <MuteButton />
 
       <header className="title-bar">
-        {logoImage ? (
-          <img src={logoImage} alt={title} className="header-logo" />
-        ) : (
-          <h1 className="header-title">{title}</h1>
+        <div className="title-bar-left">
+          {logoImage ? (
+            <img src={logoImage} alt={title} className="header-logo" />
+          ) : (
+            <h1 className="header-title">{title}</h1>
+          )}
+        </div>
+
+        {phase !== "menu" && (
+          <div className="title-bar-center">
+            <ModeCounter
+              mode={mode}
+              phase={phase}
+              clock={clock}
+              durationMs={durationMs}
+              target={tsugitashi.target}
+            />
+          </div>
         )}
       </header>
 
@@ -79,14 +93,6 @@ export default function App() {
 
       {phase !== "menu" && (
         <>
-          <ModeCounter
-            mode={mode}
-            phase={phase}
-            clock={clock}
-            durationMs={durationMs}
-            target={tsugitashi.target}
-          />
-
           <PlayerCards state={state} results={results} actions={actions} />
 
           {phase === "countdown" && (

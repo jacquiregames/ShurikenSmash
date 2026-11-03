@@ -64,10 +64,10 @@ export function MenuPanel({
                 key={n}
                 className={`select-btn ${numPlayers === n ? "selected" : ""}`}
                 aria-pressed={numPlayers === n}
-                aria-label={`${n} ninjas`}
                 onClick={() => onSelectNumPlayers(n)}
               >
-                <img src={getImageUrl(`${n}p`)} alt="" className="select-img" draggable={false} />
+                <span className="select-num">{n}</span>
+                <span className="select-label">Ninjas</span>
               </button>
             ))}
           </div>

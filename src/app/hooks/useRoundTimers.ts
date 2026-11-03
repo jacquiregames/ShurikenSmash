@@ -1,6 +1,7 @@
 import { useEffect, type Dispatch } from "react";
 import { COUNTDOWN_GO_MS, ENDED_HOLD_MS, VIDEO_FALLBACK_MS } from "../../shared/config/timing";
 import type { Clock } from "../../shared/game/types";
+import { BLIND_VIDEO_FALLBACK_MS } from "../../modes/blind/config";
 import { roundMsFor } from "../../modes/registry";
 import { everyoneHolding } from "../../modes/tsugitashi/logic";
 import { roundDuration, type GameAction } from "../reducer";
@@ -45,12 +46,13 @@ export function useRoundTimers(state: GameState, dispatch: Dispatch<GameAction>,
     return () => cancelAnimationFrame(raf);
   }, [phase, duration, startedAt, clock, dispatch]);
 
-  // Video fallback safety timer
+  // Video fallback safety timer (4s for blind mode videos, 12s fallback elsewhere)
   useEffect(() => {
     if (phase !== "video") return;
-    const id = window.setTimeout(() => dispatch({ type: "video_timeout" }), VIDEO_FALLBACK_MS);
+    const fallbackMs = mode === "blind" ? BLIND_VIDEO_FALLBACK_MS : VIDEO_FALLBACK_MS;
+    const id = window.setTimeout(() => dispatch({ type: "video_timeout" }), fallbackMs);
     return () => window.clearTimeout(id);
-  }, [phase, dispatch]);
+  }, [phase, mode, dispatch]);
 
   // Post-round hold before showing results
   useEffect(() => {
