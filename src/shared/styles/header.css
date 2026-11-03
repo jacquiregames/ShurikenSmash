@@ -1,10 +1,22 @@
 .title-bar {
   position: relative;
   z-index: 3;
+  width: 100%;
+  max-width: 1600px;
   display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 0.5vh;
+}
+
+/* Menu phase: big centered logo */
+.phase-menu .title-bar {
+  justify-content: center;
+}
+
+.phase-menu .title-bar-left {
+  position: static;
+  transform: none;
 }
 
 .header-logo {
@@ -20,15 +32,6 @@
   pointer-events: none;
 }
 
-.phase-countdown .header-logo,
-.phase-playing .header-logo,
-.phase-video .header-logo,
-.phase-ended .header-logo,
-.phase-results .header-logo {
-  height: clamp(40px, 7vh, 70px);
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 16px rgba(255, 120, 20, 0.35));
-}
-
 .header-title {
   margin: 0;
   font-family: var(--font-display);
@@ -40,10 +43,36 @@
     4px 4px 0 #000;
 }
 
-.phase-countdown .header-title,
-.phase-playing .header-title,
-.phase-video .header-title,
-.phase-ended .header-title,
-.phase-results .header-title {
-  font-size: clamp(1.6rem, 4vw, 2.6rem);
+/* In-game / Results: Logo in the top-left, timer centered in-line */
+.game:not(.phase-menu) .title-bar {
+  min-height: clamp(48px, 8vh, 80px);
+  padding: 0 1vw;
+  margin-bottom: 1vh;
+}
+
+.game:not(.phase-menu) .title-bar-left {
+  position: absolute;
+  left: 1vw;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  z-index: 4;
+}
+
+.game:not(.phase-menu) .title-bar-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.game:not(.phase-menu) .header-logo {
+  height: clamp(38px, 6.5vh, 65px);
+  max-width: clamp(140px, 20vw, 260px);
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 16px rgba(255, 120, 20, 0.35));
+}
+
+.game:not(.phase-menu) .header-title {
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
 }

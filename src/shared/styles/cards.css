@@ -176,7 +176,7 @@
 .card-result-score {
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: clamp(1rem, 1.8vw, 1.35rem);
+  font-size: clamp(1rem, 1.8vw, 1.7rem);
   color: #fff;
   text-shadow: 0 2px 4px #000;
   letter-spacing: 0.05em;
@@ -272,9 +272,9 @@
 }
 
 .locked-badge {
-  font-size: clamp(4rem, 4vw, 5rem);
-  color: #2ee6a0;
-  text-shadow: 0 0 15px rgba(46, 230, 160, 0.8);
+  font-size: clamp(1.5rem, 4vw, 4.5rem);
+  color: #FFFFFF;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 1);
 }
 
 .waiting-badge {

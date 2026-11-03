@@ -11,6 +11,10 @@ export const getOutcomeVideoUrl = (colorName: NinjaColor, outcome: Outcome) =>
   `${base}videos/winlose/${colorName}-${outcome}.mp4`;
 export const getBonusImageUrl = (name: BonusTier) => `${base}images/${name}.webp`;
 
+/** Blind (Shadow Strike) custom media */
+export const getBlindImageUrl = (name: string) => `${base}images/blind/${name}.png`;
+export const getBlindVideoUrl = (colorName: NinjaColor) => `${base}videos/blind/${colorName}.mp4`;
+
 /**
  * Rank art by 1-based place. The 4th-place file is still spelled `forth.webp` on disk;
  * to fix the spelling, rename `public/images/forth.webp` and change the last entry here.

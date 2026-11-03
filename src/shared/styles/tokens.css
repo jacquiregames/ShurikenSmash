@@ -1,16 +1,23 @@
 /*
- * The app's font system. Every mode uses these three tokens; nothing else names a font.
+ * The app's font system. Every screen uses these tokens; nothing else names a font.
  *
- *   --font-display  headings, big numbers, buttons      (Bangers)
+ *   --font-display  headings, big numbers, buttons      (Luckiest Guy in the games, Bangers on the menu)
  *   --font-body     everything else                     (Rajdhani)
  *   --font-name     player names on the player cards    (Painting With Chocolate)
  *
- * Bangers and Rajdhani have no kanji or kana, so each stack falls back to Zen Kaku
- * Gothic New (self-hosted, loaded from main.tsx) for the Japanese in Kunai Bullseye.
+ * The menu page (`.game.phase-menu`) re-points --font-display at --font-menu, so every
+ * rule that uses --font-display switches font there with no per-element overrides.
+ *
+ * Luckiest Guy and Painting With Chocolate load from fonts.css (files in shared/fonts/);
+ * Bangers and Rajdhani load from main.tsx.
  */
 :root {
-  --font-display: "Bangers", "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", cursive;
-  --font-body:
-    "Rajdhani", "Zen Kaku Gothic New", "Hiragino Sans", "Yu Gothic", system-ui, sans-serif;
-  --font-name: "Painting With Chocolate", var(--font-display);
+  --font-menu: "Bangers", cursive;
+  --font-display: "Luckiest Guy", cursive;
+  --font-body: "Rajdhani", system-ui, sans-serif;
+  --font-name: "Painting With Chocolate", "Luckiest Guy", cursive;
+}
+
+.phase-menu {
+  --font-display: var(--font-menu);
 }

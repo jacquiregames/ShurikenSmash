@@ -5,6 +5,8 @@ import type { GameMode, Ninja, Outcome, PlayerResultInfo } from "../game/types";
 interface PlayerCardShellProps {
   player: Ninja;
   mode: GameMode;
+  /** Explicit background image override (e.g. for Blind mode) */
+  bgImage?: string;
   isLeading?: boolean;
   isLocked?: boolean;
   /** The player's button is currently held down (Tsugitashi). */
@@ -24,6 +26,7 @@ interface PlayerCardShellProps {
 export function PlayerCardShell({
   player,
   mode,
+  bgImage: customBgImage,
   isLeading = false,
   isLocked = false,
   keyHeld = false,
@@ -54,7 +57,8 @@ export function PlayerCardShell({
     onVideoEnd(player.id);
   };
 
-  const bgImage = outcome ? getOutcomeImageUrl(player.colorName, outcome) : player.bgImage;
+  const bgImage =
+    customBgImage ?? (outcome ? getOutcomeImageUrl(player.colorName, outcome) : player.bgImage);
   const hasVideo = activeVideoUrl !== undefined;
 
   return (

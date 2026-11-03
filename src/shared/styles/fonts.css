@@ -1,3 +1,12 @@
+/* "Luckiest Guy" is the display font (see tokens.css --font-display). */
+@font-face {
+  font-family: "Luckiest Guy";
+  src: url("../fonts/LuckiestGuy-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* "Painting With Chocolate" is used for player names only (see tokens.css --font-name). */
 @font-face {
   font-family: "Painting With Chocolate";

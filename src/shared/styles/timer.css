@@ -1,14 +1,14 @@
 .timer-wrap {
   position: relative;
   z-index: 2;
-  width: min(700px, 90vw);
+  width: min(550px, 55vw);
   text-align: center;
-  margin: 1vh 0 2vh;
+  margin: 0;
 }
 
 .timer-text {
   font-family: var(--font-display);
-  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-size: clamp(2rem, 5vw, 3.4rem);
   line-height: 1;
   color: #fff;
   text-shadow: 0 0 20px #ffc93c;
@@ -16,11 +16,11 @@
 }
 
 .timer-bar {
-  height: 14px;
-  margin-top: 0.5rem;
+  height: 10px;
+  margin-top: 0.35rem;
   background: rgba(0, 0, 0, 0.6);
   border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: 7px;
+  border-radius: 5px;
   overflow: hidden;
 }
 
