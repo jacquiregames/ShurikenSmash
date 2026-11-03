@@ -34,9 +34,10 @@ subscribes to; per-frame marker and fuse movement writes straight to the DOM.
 
 ## Fonts
 
-Tokens live in `shared/styles/tokens.css`: `--font-display` (Bangers), `--font-body` (Rajdhani) and
-`--font-name` (Painting With Chocolate, used for player names). Zen Kaku Gothic New is the self-hosted
-kanji fallback for all three. Everything is bundled; there are no Google Fonts requests.
+Tokens live in `shared/styles/tokens.css`: `--font-display` (Luckiest Guy in the games; the menu page swaps it for Bangers), `--font-body` (Rajdhani) and
+`--font-name` (Painting With Chocolate, used for player names). Everything is bundled; there are no
+Google Fonts requests. None of the fonts has kanji or kana, so don't add Japanese text without
+adding a font that covers it.
 
 ## Scripts
 

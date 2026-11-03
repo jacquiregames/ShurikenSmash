@@ -11,12 +11,6 @@ importers:
       '@fontsource/bangers':
         specifier: ^5.3.0
         version: 5.3.0
-      '@fontsource/rajdhani':
-        specifier: ^5.3.0
-        version: 5.3.0
-      '@fontsource/zen-kaku-gothic-new':
-        specifier: ^5.3.1
-        version: 5.3.1
       react:
         specifier: ^19.3.1
         version: 19.3.1
@@ -56,12 +50,6 @@ packages:
 
   '@fontsource/bangers@5.3.0':
     resolution: {integrity: sha512-tSRpmWwkqrO9PCqo9wjA/99/5sLOIWm5cf51G3ooEHd8qZus8sVSSJoWp/7EvM5rIgZMjKRG6XtY9yeisKxE7g==}
-
-  '@fontsource/rajdhani@5.3.0':
-    resolution: {integrity: sha512-oBJgSIibWJvVBKseme1JczqPLoDHN97LHti4uh0LjfcJqQoVmnQQlRKIpEjTJV559rmVQ6qbVZZwKwk2wkBTtw==}
-
-  '@fontsource/zen-kaku-gothic-new@5.3.1':
-    resolution: {integrity: sha512-L69mE6bkzeVK3UdTenxOmCIWvTwMxohJRNm1dAj+W+UiCULQ91b7M77ENVw+pjGmFL6zKPFYFeH3g8x2ugAJNw==}
 
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
@@ -637,10 +625,6 @@ packages:
 snapshots:
 
   '@fontsource/bangers@5.3.0': {}
-
-  '@fontsource/rajdhani@5.3.0': {}
-
-  '@fontsource/zen-kaku-gothic-new@5.3.1': {}
 
   '@jridgewell/resolve-uri@3.1.2': {}
 
