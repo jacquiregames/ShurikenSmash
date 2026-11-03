@@ -9,5 +9,5 @@ export const blindMeta: ModeMeta = {
   logoImage: getImageUrl("shadow-strike"),
   rulesImage: getImageUrl("strike-rules"),
   roundMs: BLIND_ROUND_MS,
-  usesOutcomeMedia: true,
+  usesOutcomeMedia: false,
 };

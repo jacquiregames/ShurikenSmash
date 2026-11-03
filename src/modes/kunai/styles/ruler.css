@@ -27,17 +27,6 @@
 .kb-root .ruler .tick.minor {
   height: 7px;
 }
-.kb-root .ruler .tick.lbl::after {
-  content: attr(data-l);
-  position: absolute;
-  top: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 9.5px;
-  letter-spacing: 0.1em;
-  color: var(--ash);
-  white-space: nowrap;
-}
 
 .kb-root .ruler .zero {
   position: absolute;
@@ -78,16 +67,4 @@
   border-left: 5px solid transparent;
   border-right: 5px solid transparent;
   border-bottom: 7px solid var(--c);
-}
-
-.kb-root .ruler-mark span {
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  color: var(--c);
-  background: rgba(8, 9, 14, 0.88);
-  border: 1px solid rgba(244, 234, 214, 0.12);
-  padding: 1px 4px;
-  margin-top: 1px;
-  white-space: nowrap;
 }

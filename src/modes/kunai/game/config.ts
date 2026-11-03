@@ -1,4 +1,4 @@
-import type { Ninja, NinjaColor } from "../../../shared/game/types";
+import type { Ninja } from "../../../shared/game/types";
 
 /* ============================================================
    Tuning, scoring and player roster for Kunai Bullseye.
@@ -15,21 +15,10 @@ export interface KunaiPlayer {
   code: string;
   /** Seat label, "P1".."P4". */
   label: string;
+  /** The name the player has on the menu (e.g. "Player 1"). */
   name: string;
-  jp: string;
-  role: string;
   color: string;
 }
-
-/** Name, kanji and title follow the colour a player picked in the menu. */
-const IDENTITY: Record<NinjaColor, { name: string; jp: string; role: string }> = {
-  red: { name: "AKEMI", jp: "朱", role: "Crimson Fang" },
-  yellow: { name: "FUYU", jp: "金", role: "Gilded Shadow" },
-  green: { name: "HAYATE", jp: "翠", role: "Wind Step" },
-  blue: { name: "RIN", jp: "蒼", role: "Moon On The Water" },
-  orange: { name: "KAEDE", jp: "橙", role: "Autumn Ember" },
-  purple: { name: "MURASAKI", jp: "紫", role: "Twilight Veil" },
-};
 
 /** Builds the match roster from the ninjas that are playing. */
 export function buildKunaiPlayers(ninjas: readonly Ninja[]): KunaiPlayer[] {
@@ -39,7 +28,7 @@ export function buildKunaiPlayers(ninjas: readonly Ninja[]): KunaiPlayer[] {
     code: n.code,
     label: `P${i + 1}`,
     color: n.color,
-    ...IDENTITY[n.colorName],
+    name: n.name,
   }));
 }
 
@@ -72,13 +61,13 @@ export const FLIGHT_MS = 520;
 
 export type ZoneKey = "bull" | "inner" | "mid" | "outer" | "wood" | "off";
 
-export const ZONES: Record<ZoneKey, { label: string; jp: string; color: string; pts: string }> = {
-  bull: { label: "Bullseye", jp: "的中", color: "#e3b23c", pts: "100" },
-  inner: { label: "Inner Ring", jp: "内", color: "#f4ead6", pts: "81 – 94" },
-  mid: { label: "Mid Ring", jp: "中", color: "#c9603f", pts: "63 – 80" },
-  outer: { label: "Outer Ring", jp: "外", color: "#4f7fa8", pts: "20 – 62" },
-  wood: { label: "Backboard", jp: "板", color: "#7d6a4a", pts: "1 – 19" },
-  off: { label: "Off Target", jp: "外れ", color: "#5d5f6b", pts: "0" },
+export const ZONES: Record<ZoneKey, { label: string; color: string; pts: string }> = {
+  bull: { label: "Bullseye", color: "#e3b23c", pts: "100" },
+  inner: { label: "Inner Ring", color: "#f4ead6", pts: "81 – 94" },
+  mid: { label: "Mid Ring", color: "#c9603f", pts: "63 – 80" },
+  outer: { label: "Outer Ring", color: "#4f7fa8", pts: "20 – 62" },
+  wood: { label: "Backboard", color: "#7d6a4a", pts: "1 – 19" },
+  off: { label: "Off Target", color: "#5d5f6b", pts: "0" },
 };
 
 export function zoneFor(d: number): ZoneKey {
@@ -95,9 +84,4 @@ export function scoreFor(d: number): number {
   if (d >= REACH) return 0;
   const t = (REACH - d) / REACH;
   return Math.max(1, Math.round(100 * Math.pow(t, 1.25)));
-}
-
-/** rank wording for the final screen */
-export function rankWord(n: number): string {
-  return ["CHAMPION", "SECOND", "THIRD", "FOURTH"][n] ?? "";
 }

@@ -86,8 +86,7 @@
   }
 }
 
-.stack-field.is-fallen .stack-block.placed {
-  filter: grayscale(0.85) brightness(0.55);
+.stack-field.is-fallen .stack-block.placed { 
   transition: filter 0.6s;
 }
 
@@ -289,9 +288,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  text-align: center;
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45) 0%, rgba(0, 0, 0, 0.7) 100%);
+  justify-content: flex-start;
+  padding-top: clamp(1.2rem, 14cqh, 3.5rem);
+  text-align: center; 
   animation: stackOverlayIn 0.4s 0.2s backwards;
 }
 @keyframes stackOverlayIn {
@@ -303,7 +302,7 @@
 
 .stack-overlay-title {
   font-family: var(--font-display);
-  font-size: 11cqw;
+  font-size: 2rem;
   letter-spacing: 0.12em;
 }
 .stack-overlay.fallen .stack-overlay-title {
@@ -317,90 +316,12 @@
     0 0 16px #ffd700;
 }
 
-/* ---------- Stats ---------- */
-.stack-stats {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.3rem;
-}
-.stack-stat {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 0.2rem 0.1rem;
-  background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
-.stack-stat-label {
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-  color: #b9adc9;
-}
-.stack-stat-value {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  letter-spacing: 0.05em;
-  color: #fff;
-  text-shadow: 0 0 10px var(--c);
-}
-.stack-stat-value.rank {
-  color: var(--a);
-  font-size: 0.95rem;
-}
-.stack-stat-value.speed {
-  font-size: 0.85rem;
-}
-
-.tier-walk {
-  color: #86efac;
-  text-shadow: 0 0 8px #2ec27e;
-}
-.tier-run {
-  color: #ffe27a;
-  text-shadow: 0 0 8px #f4b400;
-}
-.tier-wind {
-  color: #ffa94d;
-  text-shadow: 0 0 10px #ff7a00;
-}
-.tier-lightning {
-  color: #ff7b7b;
-  text-shadow: 0 0 12px #e63946;
-}
-
-.stack-gauge {
-  grid-column: 1 / -1;
-  height: 8px;
-  background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.stack-gauge-fill {
-  height: 100%;
-  background: linear-gradient(90deg, #2ec27e, #f4b400 45%, #ff7a00 70%, #e63946);
-  background-size: 320px 100%;
-  box-shadow: 0 0 10px rgba(255, 120, 60, 0.6);
-  transition: width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-/* Compact result badge shown under the tower at the end of a stack round */
-.card-result-badge.compact {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.6rem;
-  padding: 0.35rem 0.5rem;
-}
-.card-result-badge.compact .card-rank-img {
-  width: clamp(44px, 5vw, 70px);
-}
-.card-result-badge.compact .card-bonus-img {
-  width: clamp(60px, 6vw, 90px);
-  margin-top: 0;
-}
-.card-result-badge.compact .card-result-score {
-  font-size: clamp(0.85rem, 1.3vw, 1.1rem);
+/* Result badge positioned over the player card at the bottom */
+.card.mode-stack .card-result-badge {
+  position: absolute;
+  bottom: 0.8rem;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  z-index: 15;
 }

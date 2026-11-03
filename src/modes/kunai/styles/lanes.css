@@ -144,25 +144,3 @@
   color: var(--paper);
   line-height: 1.1;
 }
-
-.kb-root .lane-status {
-  margin-left: auto;
-  font-family: var(--display);
-  font-size: 10.5px;
-  letter-spacing: 0.16em;
-  color: var(--ash);
-  text-transform: uppercase;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.kb-root .lane-status.ready {
-  color: var(--c);
-  font-weight: 700;
-  animation: kb-blink 1.2s steps(2) infinite;
-}
-
-.kb-root .lane-status.landed {
-  color: var(--c);
-  font-weight: 700;
-}

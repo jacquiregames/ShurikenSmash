@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, type CSSProperties } from "react";
-import { BAR_CM, BULLSEYE_D, ZONES } from "../game/config";
+import { BAR_CM } from "../game/config";
 import { usePlayers } from "../players";
 import type { KunaiPhase, Run } from "../game/engine";
 
@@ -41,19 +41,6 @@ export default function AimLane({ index, run, phase, setMarkerEl, onPress }: Pro
     for (let cm = -BAR_CM; cm <= BAR_CM; cm += 4) out.push(50 + (cm / BAR_CM) * 45);
     return out;
   }, []);
-
-  const status =
-    run.status === "landed"
-      ? run.bull
-        ? "🎯 BULLSEYE!"
-        : `${ZONES[run.zone].label} (+${run.points})`
-      : run.status === "flying"
-        ? "⚡ In Flight..."
-        : armed
-          ? "PRESS TO THROW!"
-          : phase === "countdown"
-            ? "STEADY..."
-            : "STAND BY";
 
   const cls = [
     "lane",
@@ -99,11 +86,11 @@ export default function AimLane({ index, run, phase, setMarkerEl, onPress }: Pro
           </div>
         </div>
 
-        <div
-          className={`lane-status${armed ? " ready" : run.status === "landed" ? " landed" : " idle"}`}
-        >
-          {status}
-        </div>
+        {locked && (
+          <div className="readout-locked">
+            <span className="cm">{run.bull ? "🎯 0.0" : run.cm.toFixed(1)}</span>
+          </div>
+        )}
       </div>
 
       {/* Target Aiming Track */}
@@ -146,47 +133,6 @@ export default function AimLane({ index, run, phase, setMarkerEl, onPress }: Pro
           {/* Flash line on release */}
           {locked && <div className="track-lock-pulse" />}
         </div>
-
-        {/* Ruler scale labels */}
-        <div className="track-scale">
-          <span>−{BAR_CM}cm</span>
-          <span className="scale-mid">
-            🎯 的中 BULLSEYE (±{(BULLSEYE_D * BAR_CM).toFixed(1)}cm)
-          </span>
-          <span>+{BAR_CM}cm</span>
-        </div>
-      </div>
-
-      {/* Live Result Readout */}
-      <div className="lane-readout">
-        {locked ? (
-          <div className="readout-locked">
-            <span className="cm">
-              {run.bull ? "🎯 0.0" : run.cm.toFixed(1)}
-              <small>cm</small>
-            </span>
-            <span
-              className="zone-pill"
-              style={{ borderColor: ZONES[run.zone].color, color: ZONES[run.zone].color }}
-            >
-              {ZONES[run.zone].label}
-            </span>
-            <span className="pts">
-              <b>+{run.points}</b> PTS
-            </span>
-            {run.auto && <span className="auto-tag">fuse timeout</span>}
-          </div>
-        ) : (
-          <span className="empty">
-            {armed ? (
-              <span className="prompt-throw">
-                PRESS <b className="highlight-key">[{p.key}]</b> TO LOOSE KUNAI
-              </span>
-            ) : (
-              "Awaiting throw signal..."
-            )}
-          </span>
-        )}
       </div>
     </div>
   );

@@ -25,7 +25,7 @@
 }
 
 .tsugi-target-value {
-  font-size: clamp(1.8rem, 4vw, 3rem);
+  font-size: clamp(1.8rem, 5vw, 6rem);
 }
 
 .tsugi-value {

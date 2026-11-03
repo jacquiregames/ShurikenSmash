@@ -8,20 +8,11 @@ import AimLane from "./components/AimLane";
 import Arena from "./components/Arena";
 import GameOver from "./components/GameOver";
 import Scoreboard from "./components/Scoreboard";
-import { ROUNDS, SPEED, buildKunaiPlayers } from "./game/config";
-import type { KunaiPhase } from "./game/engine";
+import { buildKunaiPlayers } from "./game/config";
 import { useEngine } from "./game/useEngine";
 import * as sfx from "./game/sfx";
 import { PlayersContext } from "./players";
 import "./kunai.css";
-
-const PHASE_TAG: Record<KunaiPhase, string> = {
-  title: "GET READY",
-  countdown: "READY",
-  live: "THROW!",
-  roundEnd: "ROUND OVER",
-  gameOver: "MATCH OVER",
-};
 
 interface KunaiGameProps {
   /** The ninjas playing this match (3 or 4), in seat order. */
@@ -102,8 +93,6 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
     </button>
   );
 
-  const speedMultiplier = (SPEED[round - 1] / SPEED[0]).toFixed(2);
-
   return (
     <PlayersContext.Provider value={players}>
       <div className="kb-root">
@@ -114,51 +103,7 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
               <img className="brand-logo" src={logoSrc} alt={logoAlt} draggable={false} />
             </div>
 
-            <div className="topmid">
-              <div className="round-pips">
-                {Array.from({ length: ROUNDS }, (_, i) => {
-                  const n = i + 1;
-                  const cls = n < round ? "pip done" : n === round ? "pip is-active" : "pip";
-                  return (
-                    <div
-                      className={cls}
-                      key={n}
-                      title={`Round ${n}: ${(SPEED[i] / SPEED[0]).toFixed(2)}x speed`}
-                    >
-                      <span className="n">{["一", "二", "三"][i]}</span>
-                      <span className="l">ROUND {n}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="phase-tag">
-                {PHASE_TAG[phase]}{" "}
-                {phase === "live" || phase === "countdown" ? (
-                  <b>
-                    · {round}/{ROUNDS} ({speedMultiplier}×)
-                  </b>
-                ) : null}
-              </div>
-            </div>
-
             <div className="topright">
-              <div className="hint-keys" title="Throw your kunai with your key">
-                KEYS:
-                {players.map((p) => (
-                  <span
-                    className="tiny-cap"
-                    key={p.id}
-                    style={{
-                      color: p.color,
-                      borderColor: `${p.color}88`,
-                      background: `${p.color}18`,
-                    }}
-                    title={`${p.label} (${p.name}): key [${p.key}]`}
-                  >
-                    {p.key}
-                  </span>
-                ))}
-              </div>
               {soundBtn}
               <button
                 type="button"
@@ -202,13 +147,12 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
               </button>
             </div>
           </header>
-
+ 
           <div className="stage">
-            <Scoreboard runs={runs} history={history} winners={winners} />
+            <Scoreboard runs={runs} history={history} winners={winners} phase={phase} round={round} />
             <Arena
               runs={runs}
               phase={phase}
-              round={round}
               count={count}
               banner={banner}
               callout={callout}
@@ -218,7 +162,7 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
               fuseFillRef={fuseFillRef}
               fuseValRef={fuseValRef}
             />
-          </div>
+          </div> 
 
           <div className="lanes" style={{ "--np": players.length } as CSSProperties}>
             {players.map((p, i) => (

@@ -1,5 +1,5 @@
+import { ROUNDS } from "../game/config";
 import { useMemo, type CSSProperties } from "react";
-import { ROUNDS, rankWord } from "../game/config";
 import { usePlayers } from "../players";
 import { ShurikenIcon } from "./Icons";
 
@@ -39,7 +39,6 @@ export default function GameOver({ winners, history, totals, onRematch, onTitle 
 
   const tie = winners.length > 1;
   const lead = PLAYERS[winners[0]];
-  const best = Math.max(...totals);
 
   return (
     <div className="over" role="dialog" aria-modal="true" aria-label="Match result">
@@ -78,8 +77,6 @@ export default function GameOver({ winners, history, totals, onRematch, onTitle 
       ))}
 
       <div className="over-card">
-        <div className="seal">忍</div>
-        <div className="over-kicker">終局 · match complete</div>
         <h2 className="over-title">
           {tie ? (
             <>
@@ -91,12 +88,6 @@ export default function GameOver({ winners, history, totals, onRematch, onTitle 
             </>
           )}
         </h2>
-        <p className="over-sub">
-          {tie
-            ? `Level on ${best} points after ${ROUNDS} rounds — a tie is a victory for both`
-            : `Highest accuracy after ${ROUNDS} rounds · ${best} of ${ROUNDS * 100} points`}
-        </p>
-
         <div className="winners">
           {winners.map((w, k) => {
             const p = PLAYERS[w];
@@ -111,32 +102,15 @@ export default function GameOver({ winners, history, totals, onRematch, onTitle 
                   } as CSSProperties
                 }
               >
-                <span className="halo" />
-                <span className="cap">{p.key}</span>
+                <span className="halo" /> 
                 <div className="nm">{p.name}</div>
-                <div className="sc">
-                  {totals[w]}
-                  <small>PTS</small>
-                </div>
-                <div className="tag">
-                  {tie ? "co-champion · 引き分け" : rankWord(0)} · {p.jp}
-                </div>
+                <div className="sc">{totals[w]}</div>
               </div>
             );
           })}
         </div>
 
         <table className="table">
-          <thead>
-            <tr>
-              <th style={{ width: 46 }}>#</th>
-              <th className="name">Shinobi</th>
-              {Array.from({ length: ROUNDS }, (_, r) => (
-                <th key={r}>Round {r + 1}</th>
-              ))}
-              <th>Total</th>
-            </tr>
-          </thead>
           <tbody>
             {order.map((i, rank) => {
               const p = PLAYERS[i];
@@ -166,13 +140,10 @@ export default function GameOver({ winners, history, totals, onRematch, onTitle 
           <button type="button" className="btn" onClick={onRematch}>
             <span className="pulse-ring" />
             Rematch
-            <span className="kb">SPACE</span>
           </button>
           <button type="button" className="btn ghost" onClick={onTitle}>
             Back to menu
-            <span className="kb">ESC</span>
           </button>
-          <span className="title-note">Same keys. Faster markers. Sharper shame.</span>
         </div>
       </div>
     </div>

@@ -3,7 +3,6 @@ import { PlayerCardShell } from "../../shared/components/PlayerCardShell";
 import { ResultBadge } from "../../shared/components/ResultBadge";
 import type { Ninja, PlayerResultInfo } from "../../shared/game/types";
 import { StackField } from "./StackField";
-import { StackStats } from "./StackStats";
 import type { StackPlayer } from "./types";
 
 interface StackCardProps {
@@ -33,7 +32,7 @@ export const StackCard = memo(function StackCard({
             pulseId={pulseId}
             onBurstDone={onBurstDone}
           />
-          {result ? <ResultBadge result={result} compact /> : <StackStats rows={tower.rows} />}
+          {result && <ResultBadge result={result} />}
         </>
       )}
     </PlayerCardShell>

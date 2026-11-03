@@ -153,23 +153,6 @@
   }
 }
 
-.kb-root .impact-badge {
-  position: absolute;
-  left: 50%;
-  top: -24px;
-  transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  background: rgba(10, 12, 18, 0.88);
-  border: 1px solid var(--c);
-  border-radius: 3px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
-  white-space: nowrap;
-  animation: kb-badge-pop 0.4s cubic-bezier(0.18, 1.25, 0.35, 1) both;
-}
-
 @keyframes kb-badge-pop {
   from {
     transform: translateX(-50%) translateY(10px) scale(0.5);
@@ -179,20 +162,4 @@
     transform: translateX(-50%) translateY(0) scale(1);
     opacity: 1;
   }
-}
-
-.kb-root .impact-badge .ib-p {
-  font-size: 8.5px;
-  font-weight: 900;
-  color: #12100c;
-  background: var(--c);
-  padding: 0 3px;
-  border-radius: 2px;
-}
-
-.kb-root .impact-badge .ib-val {
-  font-family: var(--display);
-  font-size: 9.5px;
-  font-weight: 700;
-  color: var(--paper);
 }

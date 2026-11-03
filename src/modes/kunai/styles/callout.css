@@ -67,23 +67,6 @@
   margin-top: 6px;
 }
 
-.kb-root .callout .who {
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.22em;
-  padding: 3px 10px;
-  background: var(--c);
-  color: #14100c;
-}
-
-.kb-root .callout .zone {
-  font-family: var(--display);
-  font-size: 13.5px;
-  letter-spacing: 0.26em;
-  color: var(--paper);
-  text-transform: uppercase;
-}
-
 .kb-root .callout .pts {
   font-family: var(--display);
   font-weight: 800;

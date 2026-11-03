@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_NINJAS, withColor } from "../../../shared/game/ninjas";
+import { DEFAULT_NINJAS } from "../../../shared/game/ninjas";
 import { BULLSEYE_D, MATO_D, REACH, buildKunaiPlayers, scoreFor, zoneFor } from "./config";
 
 describe("kunai scoring", () => {
@@ -35,16 +35,9 @@ describe("buildKunaiPlayers", () => {
     expect(players[0].color).toBe(DEFAULT_NINJAS[0].color);
   });
 
-  it("gives each colour its own name so seats stay distinguishable", () => {
-    const players = buildKunaiPlayers(
-      (["red", "yellow", "green", "blue"] as const).map((c, i) => withColor(DEFAULT_NINJAS[i], c)),
-    );
+  it("names each seat after its menu player", () => {
+    const players = buildKunaiPlayers(DEFAULT_NINJAS.slice(0, 4));
+    expect(players.map((p) => p.name)).toEqual(DEFAULT_NINJAS.slice(0, 4).map((n) => n.name));
     expect(new Set(players.map((p) => p.name)).size).toBe(4);
-    const six = buildKunaiPlayers(
-      (["red", "yellow", "green", "blue", "orange", "purple"] as const).map((c) =>
-        withColor(DEFAULT_NINJAS[0], c),
-      ),
-    );
-    expect(new Set(six.map((p) => p.name)).size).toBe(6);
   });
 });

@@ -131,50 +131,6 @@
   z-index: 2;
 }
 
-.kb-root .board-glyph {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  writing-mode: vertical-rl;
-  font-family: var(--display);
-  font-size: clamp(14px, 2.7vh, 26px);
-  letter-spacing: 0.36em;
-  color: rgba(227, 178, 60, 0.26);
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
-  z-index: 1;
-  pointer-events: none;
-  white-space: nowrap;
-}
-.kb-root .board-glyph.l {
-  left: 2.8%;
-}
-.kb-root .board-glyph.r {
-  right: 2.8%;
-  color: rgba(244, 234, 214, 0.2);
-}
-
-.kb-root .board-seal {
-  position: absolute;
-  right: 3.5%;
-  bottom: 8%;
-  width: clamp(30px, 5.2vh, 46px);
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 34%, rgba(240, 105, 79, 0.92), rgba(142, 27, 24, 0.95));
-  color: rgba(255, 236, 226, 0.95);
-  font-family: var(--display);
-  font-size: clamp(15px, 2.8vh, 24px);
-  transform: rotate(-8deg);
-  box-shadow:
-    inset 0 0 0 2px rgba(255, 220, 200, 0.25),
-    0 8px 18px rgba(0, 0, 0, 0.6);
-  opacity: 0.9;
-  z-index: 1;
-  pointer-events: none;
-}
-
 .kb-root .mato {
   position: absolute;
   left: 50%;

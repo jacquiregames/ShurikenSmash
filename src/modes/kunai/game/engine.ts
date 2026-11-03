@@ -46,9 +46,7 @@ export interface BannerRow {
 }
 
 export interface Banner {
-  jp: string;
   title: string;
-  sub?: string;
   gold?: boolean;
   rows?: BannerRow[];
 }
@@ -249,12 +247,7 @@ export function createEngine(
         history: hist,
         totals,
         banner: {
-          jp: "終局",
           title: "MATCH OVER",
-          sub:
-            who.length > 1
-              ? "the arrows are level — counting again"
-              : `${players[who[0]].name} wins with ${max} points`,
           rows,
         },
       });
@@ -268,9 +261,7 @@ export function createEngine(
       history: hist,
       totals,
       banner: {
-        jp: `第${rn}回戦 終了`,
         title: `ROUND ${rn} COMPLETE`,
-        sub: `Round ${rn + 1} — the markers quicken ×${(SPEED[rn] / SPEED[0]).toFixed(2)}`,
         rows,
       },
     });
@@ -316,14 +307,12 @@ export function createEngine(
       if (bull) {
         set({
           banner: {
-            jp: "的中！",
             title: "BULLSEYE",
-            sub: `${players[seat].name} — dead centre! +100 PTS`,
             gold: true,
           },
         });
         after(BULLSEYE_BANNER_MS, () => {
-          if (state.banner?.jp === "的中！") set({ banner: null });
+          if (state.banner?.title === "BULLSEYE") set({ banner: null });
         });
       }
 

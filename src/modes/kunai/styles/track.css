@@ -161,21 +161,6 @@
   }
 }
 
-.kb-root .track-scale {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 5px;
-  font-size: 8.5px;
-  letter-spacing: 0.14em;
-  color: var(--ash);
-  text-transform: uppercase;
-}
-
-.kb-root .track-scale .scale-mid {
-  color: var(--gold);
-  font-weight: 700;
-}
-
 /* Lane Readout */
 .kb-root .lane-readout {
   display: flex;
@@ -199,61 +184,4 @@
   color: var(--c);
   font-variant-numeric: tabular-nums;
   animation: kb-mark-in2 0.38s cubic-bezier(0.2, 1.5, 0.4, 1) both;
-}
-
-.kb-root .readout-locked .cm small {
-  font-size: 11px;
-  color: var(--paper-dim);
-  margin-left: 2px;
-}
-
-.kb-root .zone-pill {
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  border: 1px solid;
-  padding: 1px 6px;
-  border-radius: 3px;
-  background: rgba(10, 12, 18, 0.6);
-}
-
-.kb-root .readout-locked .pts {
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  color: var(--paper-dim);
-  text-transform: uppercase;
-}
-
-.kb-root .readout-locked .pts b {
-  color: var(--gold);
-  font-family: var(--display);
-  font-size: 15px;
-}
-
-.kb-root .lane-readout .empty {
-  font-size: 10.5px;
-  letter-spacing: 0.18em;
-  color: #5b5e70;
-  text-transform: uppercase;
-}
-
-.kb-root .prompt-throw {
-  color: var(--c);
-  animation: kb-blink 1.2s steps(2) infinite;
-}
-
-.kb-root .highlight-key {
-  color: #fff;
-  background: var(--c);
-  padding: 0 4px;
-  border-radius: 2px;
-}
-
-.kb-root .auto-tag {
-  font-size: 8px;
-  letter-spacing: 0.14em;
-  color: #8b6a4a;
-  border: 1px solid rgba(139, 106, 74, 0.5);
-  padding: 1px 4px;
-  text-transform: uppercase;
 }

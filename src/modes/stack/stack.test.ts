@@ -5,9 +5,7 @@ import {
   STACK_COLS,
   advanceBlock,
   overlapWith,
-  rankForRows,
   speedForRows,
-  speedTier,
 } from "./stack";
 
 describe("stack logic", () => {
@@ -27,13 +25,5 @@ describe("stack logic", () => {
     expect(speedForRows(0)).toBe(MAX_SPEED_MS);
     expect(speedForRows(100)).toBe(MIN_SPEED_MS);
     expect(speedForRows(5)).toBeLessThan(speedForRows(1));
-  });
-
-  it("maps speed and height to tiers and ranks", () => {
-    expect(speedTier(0)).toBe("walk");
-    expect(speedTier(100)).toBe("lightning");
-    expect(rankForRows(0)).toBe("GENIN");
-    expect(rankForRows(11)).toBe("KAGE");
-    expect(rankForRows(99)).toBe("KAGE");
   });
 });

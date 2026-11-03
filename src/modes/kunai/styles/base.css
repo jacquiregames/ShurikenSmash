@@ -89,11 +89,6 @@
 }
 
 /* Keyframes that several Kunai stylesheets reference. */
-@keyframes kb-blink {
-  50% {
-    opacity: 0.35;
-  }
-}
 
 @keyframes kb-mark-in2 {
   from {

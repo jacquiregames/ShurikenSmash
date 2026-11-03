@@ -215,14 +215,14 @@ export function Mato() {
       <circle cx="110" cy="110" r="70" fill="none" stroke="#314f6f" strokeWidth="8" />
       <circle cx="110" cy="110" r="64" fill="none" stroke="#121820" strokeWidth="2.2" />
 
-      {/* Mid Ring: Crimson Vermilion (朱) */}
+      {/* Mid Ring: Crimson Vermilion */}
       <circle cx="110" cy="110" r="46" fill="none" stroke="#c0382b" strokeWidth="8.5" />
       <circle cx="110" cy="110" r="40" fill="none" stroke="#781d14" strokeWidth="2" />
 
       {/* Inner Ring: Pure Ink border */}
       <circle cx="110" cy="110" r="23" fill="none" stroke="#181410" strokeWidth="5.5" />
 
-      {/* Bullseye Gold Disk (的中) */}
+      {/* Bullseye Gold Disk */}
       <circle
         cx="110"
         cy="110"

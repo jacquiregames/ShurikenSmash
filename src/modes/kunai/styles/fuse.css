@@ -17,15 +17,6 @@
   font-size: 14px;
 }
 
-.kb-root .fuse-row .lbl {
-  font-family: var(--display);
-  font-size: 10.5px;
-  letter-spacing: 0.28em;
-  color: var(--paper-dim);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
 .kb-root .fuse {
   position: relative;
   height: 12px;

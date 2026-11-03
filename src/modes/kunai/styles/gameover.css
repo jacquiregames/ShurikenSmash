@@ -8,8 +8,7 @@
   place-items: center;
   padding: 20px;
   overflow-x: hidden;
-  overflow-y: auto;
-  background: radial-gradient(120% 90% at 50% 30%, rgba(20, 24, 38, 0.9), rgba(4, 5, 9, 0.96));
+  overflow-y: auto; 
   animation: kb-over-in 0.4s ease-out both;
 }
 
@@ -46,10 +45,11 @@
   width: min(100%, 940px);
   padding: 30px clamp(16px, 4vw, 36px) 26px;
   text-align: center;
-  border: 1px solid var(--line);
-  background:
-    radial-gradient(120% 90% at 50% 0%, rgba(35, 42, 60, 0.92), rgba(12, 14, 21, 0.97)),
-    linear-gradient(180deg, rgba(28, 33, 48, 0.92), rgba(10, 12, 18, 0.98));
+  border: 1px solid cyan;
+  background-image: url('/images/results.webp');
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
   box-shadow:
     var(--shadow-deep),
     inset 0 1px 0 rgba(244, 234, 214, 0.08);
@@ -77,31 +77,6 @@
   border-top: 0;
 }
 
-.kb-root .seal {
-  width: 52px;
-  height: 52px;
-  margin: 0 auto 8px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  font-family: var(--display);
-  font-size: 28px;
-  color: rgba(255, 236, 226, 0.95);
-  background: radial-gradient(circle at 38% 34%, rgba(240, 105, 79, 0.92), rgba(142, 27, 24, 0.95));
-  box-shadow:
-    inset 0 0 0 2px rgba(255, 220, 200, 0.25),
-    0 8px 18px rgba(0, 0, 0, 0.6);
-  transform: rotate(-8deg);
-}
-
-.kb-root .over-kicker {
-  font-family: var(--display);
-  font-size: 13px;
-  letter-spacing: 0.4em;
-  color: var(--gold);
-  text-transform: uppercase;
-}
-
 .kb-root .over-title {
   margin-top: 4px;
   font-family: var(--display);
@@ -117,14 +92,6 @@
   font-style: normal;
   color: var(--gold);
   text-shadow: 0 0 36px rgba(227, 178, 60, 0.6);
-}
-
-.kb-root .over-sub {
-  margin-top: 8px;
-  font-size: 13px;
-  letter-spacing: 0.16em;
-  color: var(--paper-dim);
-  text-transform: uppercase;
 }
 
 .kb-root .winners {
@@ -155,16 +122,14 @@
 .kb-root .wcard .halo {
   position: absolute;
   inset: -6px;
-  border: 1px solid var(--c);
-  opacity: 0.5;
+  border: 1px solid var(--c); 
   pointer-events: none;
   animation: kb-halo 2s ease-in-out infinite;
 }
 
 @keyframes kb-halo {
   50% {
-    transform: scale(1.04);
-    opacity: 0.15;
+    transform: scale(1.04);  
   }
 }
 
@@ -183,7 +148,7 @@
 .kb-root .wcard .nm {
   margin-top: 6px;
   font-family: var(--font-name);
-  font-size: 32px;
+  font-size: 44px;
   line-height: 1.1;
   color: var(--c);
 }
@@ -195,19 +160,6 @@
   color: var(--paper);
   font-variant-numeric: tabular-nums;
 }
-.kb-root .wcard .sc small {
-  margin-left: 4px;
-  font-size: 13px;
-  color: var(--paper-dim);
-}
-
-.kb-root .wcard .tag {
-  margin-top: 6px;
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  color: var(--ash);
-  text-transform: uppercase;
-}
 
 .kb-root .over .table {
   width: 100%;
@@ -215,19 +167,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-.kb-root .over .table th,
 .kb-root .over .table td {
   padding: 8px 10px;
+  font-size: 30px;
   text-align: center;
   border-bottom: 1px solid var(--line-soft);
-}
-
-.kb-root .over .table th {
-  font-family: var(--display);
-  font-size: 12px;
-  letter-spacing: 0.2em;
-  color: var(--ash);
-  text-transform: uppercase;
 }
 
 .kb-root .over .table .name {
@@ -295,24 +239,4 @@
   border: 1px solid var(--vermilion);
   pointer-events: none;
   animation: kb-halo 1.6s ease-in-out infinite;
-}
-
-.kb-root .over .btn .kb {
-  padding: 1px 7px;
-  font-family: var(--body);
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  border: 1px solid var(--line);
-  border-bottom-width: 3px;
-  border-radius: 4px;
-  background: var(--ink-800);
-  color: var(--paper-2);
-}
-
-.kb-root .over .title-note {
-  width: 100%;
-  font-size: 12px;
-  letter-spacing: 0.16em;
-  color: var(--ash);
-  text-transform: uppercase;
 }

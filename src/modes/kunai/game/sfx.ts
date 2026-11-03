@@ -142,15 +142,15 @@ export function gong() {
   burst(0.4, 0.15, 6000, 2200, 0.02, 1.8);
 }
 
-/** Countdown: Authentic Taiko drum strikes (ドン、ドン、ドン、カッ！) */
+/** Countdown: Authentic Taiko drum strikes */
 export function count(n: number) {
   if (n === 0) {
-    // GO! (カッ - sharp wooden bachi rimshot)
+    // GO! (sharp wooden bachi rimshot)
     burst(0.18, 0.42, 2800, 600, 0, 2.2);
     tone("square", 840, 420, 0.22, 0.28);
     tone("triangle", 1120, 560, 0.2, 0.18);
   } else {
-    // 3, 2, 1 (ドン - deep Taiko drum beat)
+    // 3, 2, 1 (deep Taiko drum beat)
     const base = 85 + (3 - n) * 12;
     tone("sine", base * 1.8, base * 0.6, 0.38, 0.55);
     tone("triangle", base * 2.4, base * 0.8, 0.28, 0.32);

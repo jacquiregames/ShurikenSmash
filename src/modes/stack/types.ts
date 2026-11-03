@@ -19,7 +19,6 @@ export interface Burst {
   level: number;
 }
 
-export type SpeedTier = "walk" | "run" | "wind" | "lightning";
 export type StackStatus = "climbing" | "fallen" | "summit";
 
 export interface StackPlayer {
