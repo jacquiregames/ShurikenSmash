@@ -12,6 +12,14 @@ import { computeResults } from "./results";
 import { useGame } from "./useGame";
 import "./App.css";
 
+// Preload countdown numbers 1, 2, 3 so there is no decoding delay
+if (typeof window !== "undefined") {
+  [1, 2, 3].forEach((n) => {
+    const img = new Image();
+    img.src = getImageUrl(String(n), "png");
+  });
+}
+
 export default function App() {
   const { state, clock, actions } = useGame();
   const { phase, mode, numPlayers, ninjas, countdown } = state;
@@ -99,9 +107,17 @@ export default function App() {
             <div className="countdown-overlay" aria-live="assertive">
               {mode === "tsugitashi" && !everyoneHolding ? (
                 <div className="countdown-num countdown-hold">HOLD YOUR BUTTONS!</div>
+              ) : countdown > 0 ? (
+                <img
+                  key={countdown}
+                  src={getImageUrl(String(countdown), "png")}
+                  alt={String(countdown)}
+                  className="countdown-img"
+                  draggable={false}
+                />
               ) : (
-                <div className="countdown-num" key={countdown}>
-                  {countdown > 0 ? countdown : "STRIKE!"}
+                <div className="countdown-num" key="strike">
+                  STRIKE!
                 </div>
               )}
             </div>
@@ -118,7 +134,7 @@ export default function App() {
                 >
                   <img src={getImageUrl("continue")} alt="" className="ghost-btn-img" />
                 </button>
-              </div>
+              </div> 
             </div>
           )}
         </>
