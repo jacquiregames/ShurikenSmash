@@ -1,22 +1,7 @@
-/* ---------- media queries & accessibility ---------- */
-
-.kb-root .sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-}
+/* ---------- reduced motion ---------- */
 
 @media (prefers-reduced-motion: reduce) {
-  .kb-root .wcard .halo,
-  .kb-root .btn .pulse-ring,
-  .kb-root .petal,
   .kb-root .gold-rays {
-    animation: none !important;
-  }
-  .kb-root .kb-arena.shake {
     animation: none !important;
   }
   .kb-root .stuck .flight {

@@ -2,7 +2,7 @@
   position: relative;
   z-index: 2;
   text-align: center;
-  margin: 1vh 0 2vh;
+  margin: 11px 0 22px;
   font-family: var(--font-display);
   font-variant-numeric: tabular-nums;
 }
@@ -19,17 +19,17 @@
 }
 
 .tsugi-target-label {
-  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-size: 1.5rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
 
 .tsugi-target-value {
-  font-size: clamp(1.8rem, 5vw, 6rem);
+  font-size: 6rem;
 }
 
 .tsugi-value {
-  font-size: clamp(3.5rem, 9vw, 7rem);
+  font-size: 7rem;
   line-height: 1;
   color: #fff;
   text-shadow:
@@ -65,7 +65,7 @@
 }
 
 .tsugi-seat {
-  font-size: clamp(1.8rem, 4vw, 3.2rem);
+  font-size: 3.2rem;
 }
 
 .tsugi-seat-bust {

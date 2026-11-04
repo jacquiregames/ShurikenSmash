@@ -60,11 +60,7 @@ export interface EngineState {
   history: number[][];
   totals: number[];
   winners: number[] | null;
-  winReason: "bull" | "score" | null;
   banner: Banner | null;
-  callout: { i: number; throwId: number } | null;
-  shakeId: number;
-  pulseId: number;
 }
 
 type Sfx = Pick<
@@ -111,8 +107,7 @@ const freshRun = (): Run => ({
 });
 
 const freshRuns = (n: number): Run[] => Array.from({ length: n }, freshRun);
-const zeros = (n: number) => Array.from({ length: n }, () => 0);
-const flags = (n: number) => Array.from({ length: n }, () => false);
+const seats = <T>(n: number, value: T): T[] => Array.from({ length: n }, () => value);
 
 /** Seconds after "3" at which each count beat plays, and when the round goes live. */
 const COUNT_BEATS_MS = [700, 1400, 2100] as const;
@@ -122,7 +117,6 @@ const LAST_LAND_MS = 1000;
 const ROUND_BANNER_MS = 2900;
 const MATCH_BANNER_MS = 2600;
 const BULLSEYE_BANNER_MS = 2300;
-const CALLOUT_MS = 1900;
 
 export function createEngine(
   players: readonly KunaiPlayer[],
@@ -136,13 +130,9 @@ export function createEngine(
     count: 3,
     runs: freshRuns(N),
     history: [],
-    totals: zeros(N),
+    totals: seats(N, 0),
     winners: null,
-    winReason: null,
     banner: null,
-    callout: null,
-    shakeId: 0,
-    pulseId: 0,
   };
   const listeners = new Set<() => void>();
   const set = (patch: Partial<EngineState>) => {
@@ -151,10 +141,10 @@ export function createEngine(
   };
 
   /* Mutable per-frame data that React never reads. */
-  const pos: number[] = zeros(N);
+  const pos: number[] = seats(N, 0);
   const dir: number[] = Array.from({ length: N }, (_, i) => (i % 2 === 0 ? 1 : -1));
-  let locked = flags(N);
-  let landed = flags(N);
+  let locked = seats(N, false);
+  let landed = seats(N, false);
   let endScheduled = false;
   let fuseLeft = 0;
   let lastSec = 99;
@@ -191,8 +181,8 @@ export function createEngine(
   function beginCountdown(round: number) {
     clearTimers();
     endScheduled = false;
-    locked = flags(N);
-    landed = flags(N);
+    locked = seats(N, false);
+    landed = seats(N, false);
     for (let i = 0; i < N; i++) {
       pos[i] = (random() * 1.5 - 0.75) * (i % 2 === 0 ? 1 : 0.86);
       dir[i] = i % 2 === 0 ? 1 : -1;
@@ -204,9 +194,7 @@ export function createEngine(
       count: 3,
       runs: freshRuns(N),
       banner: null,
-      callout: null,
       winners: null,
-      winReason: null,
     });
 
     sfx.count(3);
@@ -239,37 +227,26 @@ export function createEngine(
     const rows: BannerRow[] = state.runs.map((r, i) => ({ i, cm: r.cm, pts: r.points }));
     const rn = state.round;
 
-    if (rn >= ROUNDS) {
-      const max = Math.max(...totals);
-      const who = totals.map((t, i) => (t === max ? i : -1)).filter((i) => i >= 0);
-      set({
-        phase: "roundEnd",
-        history: hist,
-        totals,
-        banner: {
-          title: "MATCH OVER",
-          rows,
-        },
-      });
-      after(MATCH_BANNER_MS, () => finish(who));
-      return;
-    }
-
-    sfx.roundUp();
+    const isLast = rn >= ROUNDS;
+    if (!isLast) sfx.roundUp();
     set({
       phase: "roundEnd",
       history: hist,
       totals,
-      banner: {
-        title: `ROUND ${rn} COMPLETE`,
-        rows,
-      },
+      banner: { title: isLast ? "MATCH OVER" : `ROUND ${rn} COMPLETE`, rows },
     });
-    after(ROUND_BANNER_MS, () => beginCountdown(rn + 1));
+
+    if (isLast) {
+      const max = Math.max(...totals);
+      const who = totals.flatMap((t, i) => (t === max ? [i] : []));
+      after(MATCH_BANNER_MS, () => finish(who));
+    } else {
+      after(ROUND_BANNER_MS, () => beginCountdown(rn + 1));
+    }
   }
 
   function finish(winners: number[]) {
-    set({ phase: "gameOver", banner: null, winners, winReason: "score" });
+    set({ phase: "gameOver", banner: null, winners });
     sfx.victory();
   }
 
@@ -298,27 +275,15 @@ export function createEngine(
       landed[seat] = true;
       set({
         runs: updateRun(seat, { status: "landed" }),
-        pulseId: state.pulseId + 1,
-        callout: { i: seat, throwId },
-        shakeId: bull || points >= 62 ? state.shakeId + 1 : state.shakeId,
       });
       sfx.hit(points, bull);
 
       if (bull) {
-        set({
-          banner: {
-            title: "BULLSEYE",
-            gold: true,
-          },
-        });
+        set({ banner: { title: "BULLSEYE", gold: true } });
         after(BULLSEYE_BANNER_MS, () => {
           if (state.banner?.title === "BULLSEYE") set({ banner: null });
         });
       }
-
-      after(CALLOUT_MS, () => {
-        if (state.callout?.throwId === throwId) set({ callout: null });
-      });
 
       if (state.phase === "live" && landed.every(Boolean)) after(LAST_LAND_MS, endRound);
     });
@@ -333,7 +298,7 @@ export function createEngine(
 
   function start() {
     sfx.unlock();
-    set({ history: [], totals: zeros(N) });
+    set({ history: [], totals: seats(N, 0) });
     beginCountdown(1);
   }
 

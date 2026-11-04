@@ -5,7 +5,8 @@ import { getImageUrl } from "../../shared/config/assets";
 export const tsugitashiMeta: ModeMeta = {
   id: "tsugitashi",
   title: "TSUGITASHI",
-  menuLabel: "➕ Tsugitashi (Don't Go Over)",
+  menuLabel: "Tsugitashi (Don't Go Over)",
+  menuIcon: getImageUrl("icons/tsugitashi-icon", "png"),
   logoImage: getImageUrl("tsugitashi"),
   rulesImage: getImageUrl("tsugitashi-rules"),
   roundMs: TSUGITASHI_ROUND_MS,

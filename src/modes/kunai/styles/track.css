@@ -1,11 +1,28 @@
-/* Sliding Track & Precision Reticle */
-.kb-root .track-container {
-  margin-top: 10px;
+/* ---------- aim track: zone bands, centre gate, sliding marker ---------- */
+
+.kc-track-container {
+  position: relative;
+  width: 100%;
+  cursor: pointer;
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+.kc-track-container.is-active {
+  border-color: var(--c);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--c) 40%, transparent);
+}
+
+.kc-track-container.is-locked {
+  cursor: default;
+  opacity: 0.85;
 }
 
 .kb-root .track {
   position: relative;
-  height: 56px;
+  height: 36px;
   border: 1px solid rgba(0, 0, 0, 0.65);
   background:
     linear-gradient(180deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.1) 45%, rgba(0, 0, 0, 0.55)),
@@ -22,26 +39,12 @@
   bottom: 0;
   width: 40.5%;
   transform: translateX(-50%);
-  border-left: 1px solid rgba(244, 234, 214, 0.2);
-  border-right: 1px solid rgba(244, 234, 214, 0.2);
   display: flex;
 }
 
-.kb-root .zb-wood {
-  flex: 1;
-  background: rgba(125, 106, 74, 0.15);
-}
-.kb-root .zb-outer {
-  flex: 1.2;
-  background: rgba(79, 127, 168, 0.18);
-}
-.kb-root .zb-mid {
-  flex: 1.2;
-  background: rgba(201, 96, 63, 0.22);
-}
-.kb-root .zb-inner {
-  flex: 1.4;
-  background: rgba(244, 234, 214, 0.18);
+/* One band per target ring: its flex weight and colour are set inline from the target art. */
+.kb-root .zb {
+  display: block;
 }
 
 .kb-root .track .grid-tick {
@@ -101,7 +104,7 @@
   bottom: 2px;
 }
 
-/* Sliding Kunai Reticle Marker */
+/* Sliding reticle marker (its --pos is written straight to the DOM by the engine) */
 .kb-root .marker {
   position: absolute;
   left: calc(50% + var(--pos, 0) * 45%);
@@ -117,7 +120,7 @@
 }
 
 .kb-root .marker::before {
-  /* Motion trail */
+  /* motion trail */
   content: "";
   position: absolute;
   top: 0;
@@ -132,7 +135,7 @@
 }
 
 .kb-root .marker::after {
-  /* Kunai diamond head cursor */
+  /* diamond head */
   content: "";
   position: absolute;
   left: 50%;
@@ -159,29 +162,4 @@
   to {
     opacity: 0;
   }
-}
-
-/* Lane Readout */
-.kb-root .lane-readout {
-  display: flex;
-  align-items: baseline;
-  margin-top: 8px;
-  min-height: 28px;
-}
-
-.kb-root .readout-locked {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.kb-root .readout-locked .cm {
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: 23px;
-  line-height: 1;
-  color: var(--c);
-  font-variant-numeric: tabular-nums;
-  animation: kb-mark-in2 0.38s cubic-bezier(0.2, 1.5, 0.4, 1) both;
 }

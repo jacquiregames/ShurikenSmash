@@ -7,10 +7,14 @@
   flex: none;
 }
 
-.kb-root .fuse-label-group {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* The fuse as it sits in the top bar. */
+.kb-root .kc-fuse-bar {
+  width: min(340px, 35vw);
+  margin: 0;
+}
+
+.kb-root .kc-fuse-bar .fuse {
+  flex: 1;
 }
 
 .kb-root .fuse-icon {
@@ -81,7 +85,7 @@
 }
 
 .kb-root .fuse-row .val {
-  font-family: var(--display);
+  font-family: var(--font-display);
   font-weight: 800;
   font-size: 19px;
   color: var(--paper);

@@ -2,31 +2,24 @@ import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { toggleMuted } from "../../shared/audio/context";
 import { useMuted } from "../../shared/audio/useMuted";
 import { Backdrop } from "../../shared/components/Backdrop";
-import { SoundOff, SoundOn } from "../../shared/components/icons";
+import { Close, Restart, SoundOff, SoundOn } from "../../shared/components/icons";
+import { getImageUrl } from "../../shared/config/assets";
+import { competitionRank, placed, type RoundResults } from "../../shared/game/ranking";
 import type { Ninja } from "../../shared/game/types";
-import AimLane from "./components/AimLane";
-import Arena from "./components/Arena";
-import GameOver from "./components/GameOver";
-import Scoreboard from "./components/Scoreboard";
-import { buildKunaiPlayers } from "./game/config";
+import { KunaiCard } from "./components/KunaiCard";
+import { ROUNDS, SPEED, buildKunaiPlayers } from "./game/config";
 import { useEngine } from "./game/useEngine";
 import * as sfx from "./game/sfx";
-import { PlayersContext } from "./players";
 import "./kunai.css";
 
 interface KunaiGameProps {
-  /** The ninjas playing this match (3 or 4), in seat order. */
   ninjas: readonly Ninja[];
-  /** Logo shown in the top bar. */
   logoSrc: string;
   logoAlt: string;
-  /** Called when the players quit (Esc / close button / "Back to menu"). */
   onExit: () => void;
 }
 
-/** Kunai Bullseye: a self-contained 3-4 player accuracy duel. Starts as soon as it mounts. */
 export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGameProps) {
-  // The roster is fixed for the life of the match, so keep one stable snapshot.
   const [players] = useState(() => buildKunaiPlayers(ninjas));
   const codeToPlayer = useMemo(
     () => Object.fromEntries(players.map((p, i) => [p.code, i] as const)) as Record<string, number>,
@@ -34,12 +27,11 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
   );
 
   const { engine, state } = useEngine(players);
-  const { phase, round, count, runs, history, totals, winners, winReason, banner, callout } = state;
-  const { shakeId, pulseId } = state;
+  const { phase, round, count, runs, history, totals, banner } = state;
   const { press, start, setMarkerEl, fuseRef, fuseFillRef, fuseValRef } = engine;
   const muted = useMuted();
 
-  // No title screen: the menu is the title screen, so the match begins immediately.
+  // Match begins immediately on mount
   useEffect(() => {
     start();
   }, [start]);
@@ -48,12 +40,13 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
     sfx.ui();
     start();
   };
+
   const toggleMute = () => {
     toggleMuted();
     if (muted) sfx.ui();
   };
 
-  /* ---- one keyboard, three or four shinobi. Escape and M are handled app-wide. ---- */
+  // Keyboard navigation & throwing
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
       const isConfirm = ev.code === "Space" || ev.code === "Enter" || ev.code === "NumpadEnter";
@@ -61,17 +54,19 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
       if (ev.repeat || ev.ctrlKey || ev.metaKey || ev.altKey) return;
 
       if (phase === "gameOver") {
-        if (isConfirm || ev.code === "KeyR") {
+        if (isConfirm) {
           sfx.ui();
-          start();
+          onExit();
         }
         return;
       }
+
       const seat = codeToPlayer[ev.code];
       if (seat !== undefined) {
         press(seat);
         return;
       }
+
       if (ev.code === "KeyR" && phase !== "live") {
         sfx.ui();
         start();
@@ -79,126 +74,186 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [phase, codeToPlayer, press, start]);
+  }, [phase, codeToPlayer, press, start, onExit]);
 
-  const soundBtn = (
-    <button
-      type="button"
-      className={`icon-btn${muted ? " off" : ""}`}
-      onClick={toggleMute}
-      title={muted ? "Unmute Sound (M)" : "Mute Sound (M)"}
-      aria-label={muted ? "Unmute Sound" : "Mute Sound"}
-    >
-      {muted ? <SoundOff /> : <SoundOn />}
-    </button>
+  // Live scoreboard totals & leaders
+  const isLive = phase === "live";
+  const liveTotals = useMemo(
+    () =>
+      players.map((_, i) => {
+        const done = history.reduce((s, r) => s + (r[i] ?? 0), 0);
+        const cur =
+          isLive && history.length < ROUNDS && runs[i].status === "landed" ? runs[i].points : 0;
+        return done + cur;
+      }),
+    [players, history, isLive, runs],
   );
 
+  const bestScore = Math.max(...liveTotals);
+
+  // Compute final RoundResults when match reaches gameOver
+  const results: RoundResults | null = useMemo(() => {
+    if (phase !== "gameOver") return null;
+    const byPlayer: RoundResults["byPlayer"] = {};
+    const winnerIds = new Set<number>();
+
+    players.forEach((p, i) => {
+      const score = totals[i];
+      const rank = competitionRank(totals, score, (a, b) => a > b);
+      byPlayer[p.id] = placed(rank, `${score} PTS`, players.length);
+      if (rank === 1) winnerIds.add(p.id);
+    });
+
+    return { winnerIds, byPlayer };
+  }, [phase, players, totals]);
+
   return (
-    <PlayersContext.Provider value={players}>
-      <div className="kb-root">
-        <Backdrop vignette />
-        <div className="shell">
-          <header className="topbar">
-            <div className="brand">
-              <img className="brand-logo" src={logoSrc} alt={logoAlt} draggable={false} />
-            </div>
+    <div className={`game phase-${phase} kb-root`}>
+      <Backdrop vignette />
 
-            <div className="topright">
-              {soundBtn}
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={restart}
-                title="Restart Match (R)"
-                aria-label="Restart Match"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                  <path d="M3 3v5h5" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                className="icon-btn"
-                onClick={onExit}
-                title="Back to Menu (Esc)"
-                aria-label="Back to Menu"
-              >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              </button>
-            </div>
-          </header>
- 
-          <div className="stage">
-            <Scoreboard runs={runs} history={history} winners={winners} phase={phase} round={round} />
-            <Arena
-              runs={runs}
-              phase={phase}
-              count={count}
-              banner={banner}
-              callout={callout}
-              shakeId={shakeId}
-              pulseId={pulseId}
-              fuseRef={fuseRef}
-              fuseFillRef={fuseFillRef}
-              fuseValRef={fuseValRef}
-            />
-          </div> 
-
-          <div className="lanes" style={{ "--np": players.length } as CSSProperties}>
-            {players.map((p, i) => (
-              <AimLane
-                key={p.id}
-                index={i}
-                run={runs[i]}
-                phase={phase}
-                setMarkerEl={setMarkerEl}
-                onPress={press}
-              />
-            ))}
-          </div>
-
-          <p className="sr" aria-live="polite">
-            {runs
-              .map((r, i) =>
-                r.status === "landed"
-                  ? `${players[i].label} ${r.bull ? "bullseye" : `${r.cm.toFixed(1)} centimetres off`}, ${r.points} points. `
-                  : "",
-              )
-              .join("")}
-          </p>
+      {/* Global Top Bar: Logo (left), Burning Fuse & Round Indicator (center), Mute & Actions (right) */}
+      <header className="title-bar kc-topbar">
+        <div className="title-bar-left">
+          <img className="header-logo" src={logoSrc} alt={logoAlt} draggable={false} />
         </div>
 
-        {phase === "gameOver" && winners && winReason && (
-          <GameOver
-            winners={winners}
-            reason={winReason}
+        <div className="title-bar-center kc-topmid">
+          {/* 3-Round Pips */}
+          <div className="kc-round-pips">
+            {Array.from({ length: ROUNDS }, (_, i) => {
+              const n = i + 1;
+              const cls = n < round ? "pip done" : n === round ? "pip is-active" : "pip";
+              return (
+                <div
+                  className={cls}
+                  key={n}
+                  title={`Round ${n}: ${(SPEED[i] / SPEED[0]).toFixed(2)}x speed`}
+                >
+                  <span className="n">R{n}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Burning Fuse Powder Timer Bar */}
+          <div className="fuse-row kc-fuse-bar">
+            <span className="fuse-icon">🧨</span>
+            <div className="fuse" ref={fuseRef}>
+              <div className="rope-texture" />
+              <div className="fill" ref={fuseFillRef} style={{ ["--f" as string]: isLive ? 1 : 0 }}>
+                <span className="spark-head" />
+              </div>
+            </div>
+            <span className="val" ref={fuseValRef}>
+              {isLive ? "0.0" : "--"}
+            </span>
+          </div>
+        </div>
+
+        <div className="kc-topright">
+          <button
+            type="button"
+            className={`icon-btn${muted ? " off" : ""}`}
+            onClick={toggleMute}
+            title={muted ? "Unmute Sound (M)" : "Mute Sound (M)"}
+            aria-label={muted ? "Unmute Sound" : "Mute Sound"}
+          >
+            {muted ? <SoundOff /> : <SoundOn />}
+          </button>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={restart}
+            title="Restart Match (R)"
+            aria-label="Restart Match"
+          >
+            <Restart />
+          </button>
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={onExit}
+            title="Back to Menu (Esc)"
+            aria-label="Back to Menu"
+          >
+            <Close />
+          </button>
+        </div>
+      </header>
+
+      {/* 4 Player Cards Arena */}
+      <div className={`arena players-${players.length} kc-arena-grid`}>
+        {players.map((p, i) => (
+          <KunaiCard
+            key={p.id}
+            player={p}
+            index={i}
+            run={runs[i]}
+            phase={phase}
             history={history}
-            totals={totals}
-            onRematch={restart}
-            onTitle={onExit}
+            totalScore={liveTotals[i]}
+            isLeader={bestScore > 0 && liveTotals[i] === bestScore}
+            result={results?.byPlayer[p.id]}
+            setMarkerEl={setMarkerEl}
+            onPress={press}
           />
-        )}
+        ))}
       </div>
-    </PlayersContext.Provider>
+
+      {/* Global Countdown Overlay with Images */}
+      {phase === "countdown" && (
+        <div className="countdown-overlay" aria-live="assertive">
+          {count > 0 ? (
+            <img
+              key={count}
+              src={getImageUrl(String(count), "png")}
+              alt={String(count)}
+              className="countdown-img"
+              draggable={false}
+            />
+          ) : (
+            <div className="countdown-num" key="throw">
+              THROW!
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Round Complete Banner Announcement */}
+      {banner && (
+        <div className={`banner${banner.gold ? " gold" : ""}`} key={banner.title}>
+          <div className="t">{banner.title}</div>
+          {banner.rows && (
+            <div className="banner-rows">
+              {banner.rows.map((row) => (
+                <div
+                  className="banner-row"
+                  key={row.i}
+                  style={{ "--c": players[row.i].color } as CSSProperties}
+                >
+                  <div className="cm">+{row.pts} PTS</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Game Over Action Bar with Continue Button Below Player Cards */}
+      {phase === "gameOver" && (
+        <div className="results-action-bar">
+          <div className="results-buttons">
+            <button
+              type="button"
+              className="ghost-btn"
+              onClick={onExit}
+              aria-label="Return to Dojo"
+            >
+              <img src={getImageUrl("continue")} alt="" className="ghost-btn-img" />
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

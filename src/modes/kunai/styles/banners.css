@@ -1,52 +1,4 @@
-/* ---------- countdown & round banners ---------- */
-
-.kb-root .flash-layer {
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  display: grid;
-  place-items: center;
-  pointer-events: none;
-}
-
-.kb-root .countdown {
-  font-family: var(--display);
-  font-weight: 800;
-  font-size: clamp(80px, 14vw, 180px);
-  line-height: 1;
-  color: var(--paper);
-  text-shadow:
-    0 0 60px rgba(226, 72, 58, 0.7),
-    0 10px 0 rgba(0, 0, 0, 0.5);
-  animation: kb-cd 0.64s cubic-bezier(0.2, 1.25, 0.3, 1) both;
-}
-
-.kb-root .countdown:not(.go) {
-  color: var(--gold);
-}
-
-.kb-root .countdown.go {
-  color: var(--vermilion);
-  font-size: clamp(52px, 8.5vw, 120px);
-  letter-spacing: 0.1em;
-}
-
-@keyframes kb-cd {
-  0% {
-    transform: scale(2.2) rotate(-6deg);
-    opacity: 0;
-    filter: blur(12px);
-  }
-  35% {
-    transform: scale(1) rotate(0);
-    opacity: 1;
-    filter: blur(0);
-  }
-  100% {
-    transform: scale(0.92);
-    opacity: 0.2;
-  }
-}
+/* ---------- round-complete banner ---------- */
 
 .kb-root .banner {
   position: absolute;
@@ -70,7 +22,7 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.85);
   animation: kb-banner-in 0.45s cubic-bezier(0.16, 1.2, 0.3, 1) both;
   pointer-events: none;
-  width: min(96%, 780px);
+  width: 780px;
 }
 
 @keyframes kb-banner-in {
@@ -85,9 +37,9 @@
 }
 
 .kb-root .banner .t {
-  font-family: var(--display);
+  font-family: var(--font-display);
   font-weight: 800;
-  font-size: clamp(28px, 4.4vw, 52px);
+  font-size: 52px;
   line-height: 1;
   letter-spacing: 0.06em;
   color: var(--paper);
@@ -112,11 +64,11 @@
 
 .kb-root .banner-row {
   text-align: center;
-  animation: kb-mark-in2 0.4s cubic-bezier(0.2, 1.5, 0.4, 1) both;
+  animation: kb-mark-in 0.4s cubic-bezier(0.2, 1.5, 0.4, 1) both;
 }
 
 .kb-root .banner-row .cm {
-  font-family: var(--display);
+  font-family: var(--font-display);
   font-weight: 800;
   font-size: 24px;
   color: var(--c);

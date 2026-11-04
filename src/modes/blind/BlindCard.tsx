@@ -29,36 +29,62 @@ export const BlindCard = memo(function BlindCard({
   onHitDone,
 }: BlindCardProps) {
   const isLocked = lockedTime !== undefined;
-  const [videoDone, setVideoDone] = useState(false);
+  const [hitVideoDone, setHitVideoDone] = useState(false);
+  const [winVideoDone, setWinVideoDone] = useState(false);
 
-  // Reset when a new round starts or the player hasn't struck
+  // Reset when a new round starts
   useEffect(() => {
     if (!isLocked) {
-      setVideoDone(false);
+      setHitVideoDone(false);
+      setWinVideoDone(false);
     }
   }, [isLocked]);
 
+  useEffect(() => {
+    if (!result) {
+      setWinVideoDone(false);
+    }
+  }, [result]);
+
+  const winner = isWinner ?? (result?.rank === 1);
+
+  // Video playback logic:
+  // 1. Hit video: plays when struck during the round until it ends
+  const isPlayingHitVideo = isLocked && !hitVideoDone && !result;
+  // 2. Win video: only for the winner once results appear, until it finishes
+  const isPlayingWinVideo = Boolean(result && winner && !winVideoDone);
+
+  const activeVideoUrl = isPlayingHitVideo
+    ? getBlindVideoUrl(player.colorName)
+    : isPlayingWinVideo
+      ? getBlindVideoUrl(`${player.colorName}-win`)
+      : undefined;
+
   const handleVideoEnd = useCallback(
     (playerId: number) => {
-      setVideoDone(true);
-      onVideoEnd(playerId);
+      if (result) {
+        // Winner's win video finished
+        setWinVideoDone(true);
+      } else {
+        // Hit video finished
+        setHitVideoDone(true);
+        onVideoEnd(playerId);
+      }
     },
-    [onVideoEnd],
+    [result, onVideoEnd],
   );
 
-  // Play /videos/blind/[color].mp4 when struck until the video ends or results appear
-  const isPlayingHitVideo = isLocked && !videoDone && !result;
-  const activeVideoUrl = isPlayingHitVideo ? getBlindVideoUrl(player.colorName) : undefined;
-
   // Background image state machine:
-  // 1. Result screen: /images/blind/[color]-win.png or /images/blind/[color]-lose.png
-  // 2. Video finished: /images/blind/[color]-hit.png
-  // 3. Start/waiting: /images/blind/[color].png
-  const winner = isWinner ?? (result?.rank === 1);
+  // 1. Result screen:
+  //    - Loser: [color]-lose.png
+  //    - Winner: [color]-win.png (once win video finishes, or fallback)
+  // 2. During round:
+  //    - Struck & hit video finished: [color]-hit.png
+  //    - Waiting / initial: [color].png
   let bgImage: string;
   if (result) {
     bgImage = getBlindImageUrl(winner ? `${player.colorName}-win` : `${player.colorName}-lose`);
-  } else if (videoDone) {
+  } else if (hitVideoDone) {
     bgImage = getBlindImageUrl(`${player.colorName}-hit`);
   } else {
     bgImage = getBlindImageUrl(player.colorName);

@@ -4,7 +4,8 @@ import type { ModeMeta } from "../../shared/game/mode";
 export const stackMeta: ModeMeta = {
   id: "stack",
   title: "SHINOBI STACK",
-  menuLabel: "🏯 Shinobi Stack (Climb)",
+  menuLabel: "Shinobi Stack (Climb)",
+  menuIcon: getImageUrl("icons/stack-icon", "png"),
   logoImage: getImageUrl("shinobi-stack"),
   rulesImage: getImageUrl("stack-rules"),
   roundMs: 30_000,

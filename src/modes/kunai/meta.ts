@@ -5,7 +5,8 @@ import type { ModeMeta } from "../../shared/game/mode";
 export const kunaiMeta: ModeMeta = {
   id: "kunai",
   title: "KUNAI BULLSAI",
-  menuLabel: "🎯 Kunai Bullsai (Aim)",
+  menuLabel: "Kunai Bullsai (Aim)",
+  menuIcon: getImageUrl("icons/kunai-icon", "png"),
   logoImage: getImageUrl("kunai-bullsai"),
   rulesImage: getImageUrl("kunai-rules"),
   usesOutcomeMedia: false,

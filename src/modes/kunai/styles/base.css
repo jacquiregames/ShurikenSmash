@@ -1,54 +1,14 @@
-/* ============================================================
-   KUNAI BULLSEYE (4th game mode)
-   Ported from the standalone game. Page-level rules (:root, body,
-   button, h1-h3, p) are scoped to .kb-root so nothing leaks into the
-   other modes, and keyframes/colliding class names carry a kb-/is- prefix.
-   ============================================================ */
+/* Kunai Bullseye foundation: the tokens it actually uses, the root shell, scoped resets,
+   and keyframes shared by several sheets. Everything is scoped to .kb-root so nothing
+   leaks into the other modes. Fonts come from shared/styles/tokens.css. */
 
 .kb-root {
-  /* night ink */
-  --ink-950: #07080d;
-  --ink-900: #0b0d14;
-  --ink-850: #10131d;
-  --ink-800: #141824;
-  --ink-700: #1c2130;
-  --ink-600: #262c3e;
-  --ink-500: #333a50;
-
-  /* paper */
   --paper: #f4ead6;
-  --paper-2: #d9ceb6;
-  --paper-dim: #a79e8c;
   --ash: #7d7f8b;
-
-  /* accents */
   --vermilion: #e2483a;
-  --vermilion-deep: #8e1b18;
   --gold: #e3b23c;
-  --gold-deep: #8a6516;
-  --jade: #37c08a;
-  --azure: #4fa3e3;
-  --smoke: rgba(244, 234, 214, 0.06);
-
-  /* players */
-  --p1: #ef5b3c;
-  --p1-deep: #a32c1c;
-  --p2: #e8b23e;
-  --p2-deep: #8f6411;
-  --p3: #3fc79a;
-  --p3-deep: #14704f;
-  --p4: #57a8e8;
-  --p4-deep: #1c5c92;
-
   --line: rgba(244, 234, 214, 0.13);
-  --line-soft: rgba(244, 234, 214, 0.07);
 
-  /* One font system for the whole app: see shared/styles/tokens.css */
-  --display: var(--font-display);
-  --body: var(--font-body);
-
-  --shadow-deep: 0 24px 60px rgba(0, 0, 0, 0.55);
-  --shadow-lift: 0 10px 24px rgba(0, 0, 0, 0.4);
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -56,7 +16,7 @@
   overflow-y: auto;
   background: transparent;
   color: var(--paper);
-  font-family: var(--body);
+  font-family: var(--font-body);
   font-size: 15px;
   line-height: 1.5;
   text-align: left;
@@ -65,8 +25,7 @@
   font-synthesis: none;
 }
 
-/* :where() keeps these element rules at zero extra specificity, exactly like the
-   original page-level `*`, `button` and heading rules, so class rules still win. */
+/* :where() keeps these element rules at zero extra specificity, so class rules still win. */
 :where(.kb-root) *,
 :where(.kb-root) *::before,
 :where(.kb-root) *::after {
@@ -88,9 +47,8 @@
   margin: 0;
 }
 
-/* Keyframes that several Kunai stylesheets reference. */
-
-@keyframes kb-mark-in2 {
+/* Used by the round cells (scoreboard.css) and the banner rows (banners.css). */
+@keyframes kb-mark-in {
   from {
     opacity: 0;
     transform: scale(0.6);

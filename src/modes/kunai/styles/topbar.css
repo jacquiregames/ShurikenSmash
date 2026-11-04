@@ -1,81 +1,93 @@
-/* ---------- shell ---------- */
+/* ---------- top bar: logo, round pips + fuse, sound / restart / exit ---------- */
 
-.kb-root .shell {
+.kb-root.game .kc-topbar {
   position: relative;
-  z-index: 2;
-  min-height: 100vh;
+  z-index: 5;
+  width: 96vw;
+  max-width: 1600px;
   display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 16px clamp(14px, 2.4vw, 34px) 20px;
-  max-width: 1800px;
-  margin: 0 auto;
-}
-
-/* ---------- top bar ---------- */
-
-.kb-root .topbar {
-  display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  gap: 18px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--line);
-  position: relative;
+  margin-bottom: 0.8vh;
+  min-height: clamp(48px, 8vh, 80px);
 }
 
-.kb-root .topbar::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  width: 168px;
-  height: 3px;
-  background: linear-gradient(90deg, var(--vermilion), rgba(226, 72, 58, 0));
-}
-
-.kb-root .brand {
+.kb-root .kc-topmid {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 1.5rem;
+  justify-content: center;
+  flex: 1;
 }
 
-.kb-root .topright {
+.kb-root .kc-topright {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 4;
+}
+
+.kb-root .icon-btn {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #f4eee0;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.kb-root .icon-btn:hover {
+  transform: scale(1.08);
+  border-color: #ffc93c;
+  color: #ffc93c;
+}
+
+.kb-root .icon-btn.off {
+  color: #ff3b4e;
+}
+
+/* ---------- 3-round pips ---------- */
+
+.kb-root .kc-round-pips {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.kb-root .icon-btn {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--line);
-  background: rgba(10, 12, 18, 0.6);
-  color: var(--paper-dim);
-  transition: 0.22s;
+.kb-root .pip {
+  position: relative;
+  width: 52px;
+  padding: 5px 2px;
+  text-align: center;
+  border: 1px solid rgba(244, 234, 214, 0.25);
+  background: rgba(10, 12, 18, 0.7);
+  border-radius: 4px;
 }
 
-.kb-root .icon-btn:hover {
+.kb-root .pip .n {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ash);
+  line-height: 1;
+}
+
+.kb-root .pip.done {
+  border-color: rgba(227, 178, 60, 0.4);
+}
+.kb-root .pip.done .n {
   color: var(--gold);
-  border-color: rgba(227, 178, 60, 0.5);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
 }
 
-.kb-root .icon-btn.off {
-  color: #6a5a55;
+.kb-root .pip.is-active {
+  border-color: #ff3b4e;
+  background: rgba(255, 59, 78, 0.25);
+  box-shadow: 0 0 16px rgba(255, 59, 78, 0.4);
 }
-
-/* ---------- logo image in the top bar ---------- */
-.kb-root .brand-logo {
-  display: block;
-  height: clamp(44px, 7vh, 72px);
-  width: auto;
-  max-width: min(320px, 38vw);
-  object-fit: contain;
-  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 14px rgba(227, 178, 60, 0.3));
-  user-select: none;
-  pointer-events: none;
+.kb-root .pip.is-active .n {
+  color: #fff;
 }

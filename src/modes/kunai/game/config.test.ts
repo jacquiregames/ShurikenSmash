@@ -1,8 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_NINJAS } from "../../../shared/game/ninjas";
-import { BULLSEYE_D, MATO_D, REACH, buildKunaiPlayers, scoreFor, zoneFor } from "./config";
+import {
+  BULLSEYE_D,
+  MATO_D,
+  REACH,
+  TARGET_RADIUS_PX,
+  TARGET_RINGS,
+  buildKunaiPlayers,
+  scoreFor,
+  zoneFor,
+} from "./config";
 
 describe("kunai scoring", () => {
+  const dAt = (px: number) => (px / TARGET_RADIUS_PX) * MATO_D;
+
   it("scores a bullseye 100 and anything past the reach 0", () => {
     expect(scoreFor(0)).toBe(100);
     expect(scoreFor(BULLSEYE_D)).toBe(100);
@@ -15,13 +26,37 @@ describe("kunai scoring", () => {
     expect(scoreFor(REACH - 0.001)).toBeGreaterThanOrEqual(1);
   });
 
-  it("maps distance to zones", () => {
+  it("never pays more for a throw further from the centre", () => {
+    let prev = Infinity;
+    for (let d = 0; d <= REACH; d += 0.001) {
+      const pts = scoreFor(d);
+      expect(pts).toBeLessThanOrEqual(prev);
+      prev = pts;
+    }
+  });
+
+  it("maps distance to the painted rings", () => {
     expect(zoneFor(0)).toBe("bull");
-    expect(zoneFor(0.05)).toBe("inner");
-    expect(zoneFor(0.15)).toBe("mid");
-    expect(zoneFor(MATO_D)).toBe("outer");
+    expect(zoneFor(dAt(60))).toBe("red");
+    expect(zoneFor(dAt(120))).toBe("white");
+    expect(zoneFor(dAt(160))).toBe("blueIn");
+    expect(zoneFor(dAt(220))).toBe("yellow");
+    expect(zoneFor(dAt(260))).toBe("blueOut");
+    expect(zoneFor(dAt(320))).toBe("orange");
+    expect(zoneFor(MATO_D)).toBe("rim");
     expect(zoneFor(0.5)).toBe("wood");
     expect(zoneFor(REACH)).toBe("off");
+  });
+
+  it("pays each ring inside its own point range", () => {
+    let inner = BULLSEYE_D;
+    for (const ring of TARGET_RINGS.slice(1)) {
+      const outer = dAt(ring.outer);
+      const mid = scoreFor((inner + outer) / 2);
+      expect(mid).toBeLessThanOrEqual(ring.hi);
+      expect(mid).toBeGreaterThanOrEqual(ring.lo);
+      inner = outer;
+    }
   });
 });
 

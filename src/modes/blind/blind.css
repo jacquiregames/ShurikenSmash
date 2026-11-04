@@ -4,3 +4,14 @@
   color: #2ee6a0;
   letter-spacing: 0.08em;
 }
+
+/* ResultsCard overlays the bottom of the card and video in Blind mode */
+.card.mode-blind .card-result-badge {
+  position: absolute;
+  bottom: 0.8rem;
+  left: 0;
+  right: 0;
+  margin-inline: auto;
+  width: 100%;
+  z-index: 5;
+}

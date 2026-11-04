@@ -1,23 +1,27 @@
-/* ---------- kunai on board & flight trajectory ---------- */
+/* ---------- kunai flight, landing impact and bullseye rays ---------- */
 
 .kb-root .stuck {
+  --tip: 1.67%; /* tip position inside the kunai art: 2 / 120 */
   position: absolute;
   left: calc(50% + var(--x) * 1%);
   top: calc(50% + var(--y) * 1%);
   width: 16%;
   min-width: 80px;
   z-index: 4;
-  transform: translate(-50%, -50%);
+  /* The blade tip (far left of the art, x=2 of 120) sits on the hit point, not the middle. */
+  transform: translate(calc(var(--tip) * -1), -50%);
   pointer-events: none;
 }
 
 .kb-root .stuck .flight {
+  transform-origin: var(--tip) 50%;
   animation: kb-kunai-fly 0.52s cubic-bezier(0.12, 0.78, 0.2, 1) both;
 }
 
 .kb-root .stuck .blade {
   display: block;
   width: 100%;
+  transform-origin: var(--tip) 50%;
   filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.7));
   animation: kb-kunai-wob 0.65s 0.5s ease-out both;
 }
@@ -153,13 +157,36 @@
   }
 }
 
-@keyframes kb-badge-pop {
-  from {
-    transform: translateX(-50%) translateY(10px) scale(0.5);
-    opacity: 0;
-  }
+/* Rays behind a bullseye hit */
+.gold-rays {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 100px;
+  height: 100px;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 2;
+  animation: kb-rays-spin 8s linear infinite;
+}
+
+.gold-rays .ray {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 160px;
+  height: 2px;
+  transform-origin: 0% 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 240, 150, 0.8),
+    rgba(248, 202, 77, 0.3) 50%,
+    transparent
+  );
+}
+
+@keyframes kb-rays-spin {
   to {
-    transform: translateX(-50%) translateY(0) scale(1);
-    opacity: 1;
+    transform: translate(-50%, -50%) rotate(360deg);
   }
 }

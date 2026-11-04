@@ -1,40 +1,190 @@
-/* ---------- arena range ---------- */
+/* ---------- arena: the row of player cards, and what sits on one card ---------- */
 
-.kb-root .kb-arena {
+/* Grid scaling. The grid itself (.arena / .players-N) lives in shared/styles/cards.css. */
+.kb-root .kc-arena-grid {
+  flex: 1;
+  min-height: 28rem;
+}
+
+/* Inside PlayerCardShell for Kunai */
+.card.mode-kunai {
+  padding: 0.7rem 0.65rem;
   display: flex;
   flex-direction: column;
-  padding: 12px 16px 14px;
-  gap: 10px;
+  justify-content: space-between;
+}
+
+.card.mode-kunai .card-name {
+  display: none; /* the name lives in the scoreboard row instead */
+}
+
+.kunai-card-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+/* Top: board and target. Transparent so the card art shows through. */
+.kc-board-section {
+  position: relative;
+  flex: 1;
+  min-height: 160px;
+  width: 100%;
+  border-radius: 6px;
   overflow: hidden;
-  transition: box-shadow 0.4s;
-}
-
-.kb-root .kb-arena.shake {
-  animation: kb-shake 0.52s cubic-bezier(0.36, 0.07, 0.19, 0.97);
-}
-
-.kb-root .kb-arena.flash-gold {
   box-shadow:
-    0 0 50px rgba(248, 202, 77, 0.4),
-    inset 0 0 30px rgba(248, 202, 77, 0.2);
+    inset 0 0 25px rgba(0, 0, 0, 0.8),
+    0 0 16px rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(0, 0, 0, 0.6);
+  background: transparent;
 }
 
-@keyframes kb-shake {
-  10%,
-  90% {
-    transform: translate3d(-2px, 1px, 0) rotate(-0.2deg);
+.kc-board {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.kc-board-axis {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1.5px;
+  transform: translateX(-0.75px);
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(227, 178, 60, 0.85) 0 8px,
+    transparent 8px 16px
+  );
+  box-shadow: 0 0 8px rgba(227, 178, 60, 0.5);
+  z-index: 2;
+}
+
+.kc-mato {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 78%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.7));
+  transition: transform 0.2s ease;
+}
+
+.kc-mato-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.kc-mato.landed {
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.85)) brightness(1.1);
+}
+
+.kc-mato.bull {
+  filter: drop-shadow(0 0 24px rgba(248, 202, 77, 0.85)) brightness(1.2);
+}
+
+/* Big round score laid over the target */
+.kc-target-score-overlay {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  text-align: center;
+  pointer-events: none;
+  animation: kb-score-pop 0.4s cubic-bezier(0.18, 1.3, 0.4, 1) both;
+  width: 90%;
+}
+
+@keyframes kb-score-pop {
+  0% {
+    transform: translate(-50%, -50%) scale(0.5);
+    opacity: 0;
   }
-  20%,
-  80% {
-    transform: translate3d(6px, -3px, 0) rotate(0.35deg);
+  100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
   }
-  30%,
-  50%,
-  70% {
-    transform: translate3d(-9px, 3px, 0) rotate(-0.5deg);
+}
+
+.kc-pts-main {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 3.2vw, 3.4rem);
+  line-height: 1;
+  color: #fff;
+  text-shadow:
+    0 0 16px var(--c),
+    0 0 32px var(--c),
+    3px 3px 0 #000;
+  letter-spacing: 0.04em;
+}
+
+.kc-target-score-overlay.is-bull .kc-pts-main {
+  color: #ffea78;
+  text-shadow:
+    0 0 20px rgba(248, 202, 77, 0.9),
+    0 0 40px #f8ca4d,
+    3px 3px 0 #3d2102;
+  animation: kb-bull-glow 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes kb-bull-glow {
+  from {
+    transform: scale(0.96);
   }
-  40%,
-  60% {
-    transform: translate3d(9px, -2px, 0) rotate(0.45deg);
+  to {
+    transform: scale(1.04);
   }
+}
+
+.kc-cm-sub {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(0.9rem, 1.3vw, 1.3rem);
+  color: #f4eee0;
+  text-shadow: 0 2px 4px #000;
+  margin-top: 2px;
+}
+
+/* Bottom: scoreboard and aim track while playing; round cells and badge at game over */
+.kc-lane-section {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.kc-result-section {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  z-index: 5;
+}
+
+.kc-result-section .srow-row2,
+.kc-result-section .card-result-badge {
+  width: 100%;
 }
