@@ -37,7 +37,10 @@ export function MenuPanel({
             aria-pressed={mode === m.id}
             onClick={() => onSelectMode(m.id)}
           >
-            {m.menuLabel}
+            {m.menuIcon && (
+              <img src={m.menuIcon} alt="" className="tab-btn-icon" draggable={false} />
+            )}
+            <span className="tab-btn-label">{m.menuLabel}</span>
           </button>
         ))}
       </div>

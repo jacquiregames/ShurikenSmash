@@ -10,7 +10,7 @@
 
 .countdown-num {
   font-family: var(--font-display);
-  font-size: clamp(10rem, 30vw, 22rem);
+  font-size: 22rem;
   color: #fff;
   text-shadow:
     0 0 30px #ff3b4e,
@@ -45,7 +45,7 @@
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
-  margin-top: 0.8vh;
+  margin-top: 9px;
   animation: actionBarIn 0.4s cubic-bezier(0.18, 1.25, 0.4, 1) both;
 }
 
@@ -68,17 +68,8 @@
   flex-wrap: wrap;
 }
 
-.results-action-bar .hint {
-  margin-top: 0.2rem;
-  font-size: 2rem;
-  color: #ffeed2;
-  opacity: 1;
-  text-shadow: 0 1px 4px #000;
-  letter-spacing: 0.08em;
-}
-
 .countdown-hold {
-  font-size: clamp(2.5rem, 7vw, 5.5rem);
+  font-size: 5.5rem;
   text-align: center;
   animation: tsugiPulse 0.8s ease-in-out infinite alternate;
 }

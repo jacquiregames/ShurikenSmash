@@ -40,11 +40,19 @@ export function useOutcomePreload({ phase, mode, ninjas, numPlayers }: GameState
         new Image().src = getBlindImageUrl(`${colorName}-win`);
         new Image().src = getBlindImageUrl(`${colorName}-lose`);
 
+        // Hit video
         const video = document.createElement("video");
         video.preload = "auto";
         video.muted = true;
         video.src = getBlindVideoUrl(colorName);
         videos.push(video);
+
+        // Win video
+        const winVideo = document.createElement("video");
+        winVideo.preload = "auto";
+        winVideo.muted = true;
+        winVideo.src = getBlindVideoUrl(`${colorName}-win`);
+        videos.push(winVideo);
       }
     }
 

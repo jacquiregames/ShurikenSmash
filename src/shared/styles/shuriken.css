@@ -2,15 +2,14 @@
   position: relative;
   width: 100%;
   flex: 1;
-  min-height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .shuriken {
-  width: clamp(95px, 13vw, 150px);
-  height: clamp(95px, 13vw, 150px);
+  width: 150px;
+  height: 150px;
   filter: drop-shadow(0 0 16px var(--g)) drop-shadow(0 8px 16px rgba(0, 0, 0, 0.7));
   transform-origin: center center;
   transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);

@@ -1,14 +1,14 @@
 .timer-wrap {
   position: relative;
   z-index: 2;
-  width: min(550px, 55vw);
+  width: 550px;
   text-align: center;
   margin: 0;
 }
 
 .timer-text {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-size: 3.4rem;
   line-height: 1;
   color: #fff;
   text-shadow: 0 0 20px #ffc93c;

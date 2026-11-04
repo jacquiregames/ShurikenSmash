@@ -10,6 +10,8 @@ export interface ModeMeta {
   title: string;
   /** Label on the menu tab. */
   menuLabel: string;
+  /** Icon image URL for the menu tab. */
+  menuIcon?: string;
   /** Modes without logo/rules art fall back to the title and the `rules` text. */
   logoImage?: string;
   rulesImage?: string;

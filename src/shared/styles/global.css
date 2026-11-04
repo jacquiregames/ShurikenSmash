@@ -20,12 +20,11 @@ body {
 
 .game {
   position: relative;
-  height: 100vh; /* fallback */
   height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2vh 2vw;
+  padding: 22px 38px;
   overflow-x: hidden;
-  overflow-y: auto; /* keep buttons reachable on short screens */
+  overflow-y: auto;
 }

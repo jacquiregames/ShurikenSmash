@@ -118,7 +118,7 @@ export default function App() {
                 >
                   <img src={getImageUrl("continue")} alt="" className="ghost-btn-img" />
                 </button>
-              </div> 
+              </div>
             </div>
           )}
         </>

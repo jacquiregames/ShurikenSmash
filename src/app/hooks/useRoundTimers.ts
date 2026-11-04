@@ -46,7 +46,7 @@ export function useRoundTimers(state: GameState, dispatch: Dispatch<GameAction>,
     return () => cancelAnimationFrame(raf);
   }, [phase, duration, startedAt, clock, dispatch]);
 
-  // Video fallback safety timer (4s for blind mode videos, 12s fallback elsewhere)
+  // Video fallback safety timer (6s for blind mode videos, 12s elsewhere)
   useEffect(() => {
     if (phase !== "video") return;
     const fallbackMs = mode === "blind" ? BLIND_VIDEO_FALLBACK_MS : VIDEO_FALLBACK_MS;

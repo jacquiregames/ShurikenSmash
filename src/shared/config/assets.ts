@@ -13,7 +13,7 @@ export const getBonusImageUrl = (name: BonusTier) => `${base}images/${name}.webp
 
 /** Blind (Shadow Strike) custom media */
 export const getBlindImageUrl = (name: string) => `${base}images/blind/${name}.png`;
-export const getBlindVideoUrl = (colorName: NinjaColor) => `${base}videos/blind/${colorName}.mp4`;
+export const getBlindVideoUrl = (name: string) => `${base}videos/blind/${name}.mp4`;
 
 /**
  * Rank art by 1-based place. The 4th-place file is still spelled `forth.webp` on disk;
