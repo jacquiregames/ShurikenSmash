@@ -1,10 +1,14 @@
-/** `kunai` is the phase while Kunai Bullseye runs; it manages its own rounds and results. */
-export type Phase = "menu" | "countdown" | "playing" | "video" | "ended" | "results" | "kunai";
-export type GameMode = "mash" | "blind" | "stack" | "kunai" | "tsugitashi";
+/**
+ * `kunai` is the phase while Kunai Bullseye runs; it manages its own rounds and results.
+ * `finale` is the Ninja Gauntlet standings screen after its last game.
+ */
+export type Phase =
+  "menu" | "countdown" | "playing" | "video" | "ended" | "results" | "kunai" | "finale";
+export type GameMode = "mash" | "blind" | "stack" | "kunai" | "tsugitashi" | "gauntlet";
 export type PlayerCount = 3 | 4;
 export type Outcome = "win" | "lose";
 export type NinjaColor = "blue" | "green" | "orange" | "purple" | "red" | "yellow";
-export type BonusTier = "plus100" | "plus50" | "plus10" | "plus0";
+export type BonusTier = "plus200" | "plus100" | "plus50" | "plus0";
 
 export interface Ninja {
   id: number;

@@ -8,12 +8,25 @@ export interface RoundResults {
 }
 
 const SUFFIXES = ["ST", "ND", "RD"] as const;
-const BONUS_TIERS_4: readonly BonusTier[] = ["plus100", "plus50", "plus10", "plus0"];
-const BONUS_TIERS_3: readonly BonusTier[] = ["plus100", "plus50", "plus0"];
+const BONUS_TIERS_4: readonly BonusTier[] = ["plus200", "plus100", "plus50", "plus0"];
+const BONUS_TIERS_3: readonly BonusTier[] = ["plus200", "plus100", "plus0"];
+
+/** Points each bonus tier is worth in a Ninja Gauntlet. */
+export const BONUS_POINTS: Record<BonusTier, number> = {
+  plus200: 200,
+  plus100: 100,
+  plus50: 50,
+  plus0: 0,
+};
+
+/** The bonus a finishing place earns; a player who did not place (`null`) earns none. */
+export function bonusTierFor(rank: number | null, playerCount: number): BonusTier {
+  const tiers = playerCount === 3 ? BONUS_TIERS_3 : BONUS_TIERS_4;
+  return (rank !== null && tiers[rank - 1]) || "plus0";
+}
 
 export function getRankInfo(rank: number, playerCount = 4) {
-  const bonusTiers = playerCount === 3 ? BONUS_TIERS_3 : BONUS_TIERS_4;
-  const bonusTier = bonusTiers[rank - 1];
+  const bonusTier = (playerCount === 3 ? BONUS_TIERS_3 : BONUS_TIERS_4)[rank - 1];
   return {
     label: `${rank}${SUFFIXES[rank - 1] ?? "TH"} PLACE`,
     rankImage: getRankImageUrl(rank),

@@ -2,7 +2,7 @@
   position: relative;
   z-index: 2;
   flex: 1;
-  width: 1600px;
+  width: 1700px;
   display: grid;
   gap: 23px;
   padding-bottom: 11px;
@@ -162,8 +162,7 @@
 }
 
 .card-rank-img {
-  width: 150px;
-  max-width: 95%;
+  width: 140px; 
   height: auto;
   object-fit: contain;
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.8));
@@ -181,7 +180,7 @@
 }
 
 .card-bonus-img {
-  width: 155px;
+  width: 150px;
   max-width: 100%;
   height: auto;
   object-fit: contain;

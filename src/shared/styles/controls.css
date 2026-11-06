@@ -111,6 +111,11 @@ button:focus-visible {
   border-color: #ffc93c;
 }
 
+/* The music button sits to the left of the mute button (40px wide + 8px gap). */
+.mute-btn.music-btn {
+  right: 62px;
+}
+
 .mute-btn.off {
   color: #ff3b4e;
 }

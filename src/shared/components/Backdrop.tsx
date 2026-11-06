@@ -1,4 +1,4 @@
-import { getImageUrl } from "../config/assets";
+import { getBackdropUrl } from "../config/assets";
 
 /**
  * The full-screen background art. With `vignette` it is wrapped in a layer that also
@@ -9,7 +9,7 @@ export function Backdrop({ vignette = false }: { vignette?: boolean }) {
     <div
       className="bg"
       aria-hidden={vignette ? undefined : true}
-      style={{ backgroundImage: `url("${getImageUrl("background")}")` }}
+      style={{ backgroundImage: `url("${getBackdropUrl()}")` }}
     />
   );
   if (!vignette) return art;

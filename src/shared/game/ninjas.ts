@@ -9,10 +9,10 @@ export function withColor(ninja: Ninja, colorName: NinjaColor): Ninja {
 type NinjaBase = Omit<Ninja, "color" | "glow" | "bgImage">;
 
 const NINJA_BASES: readonly NinjaBase[] = [
-  { id: 0, name: "Player 1", key: "A", code: "KeyA", colorName: "red" },
+  { id: 0, name: "Player 1", key: "A", code: "KeyA", colorName: "purple" },
   { id: 1, name: "Player 2", key: "F", code: "KeyF", colorName: "green" },
   { id: 2, name: "Player 3", key: "H", code: "KeyH", colorName: "blue" },
-  { id: 3, name: "Player 4", key: "L", code: "KeyL", colorName: "yellow" },
+  { id: 3, name: "Player 4", key: "L", code: "KeyL", colorName: "orange" },
 ];
 
 export const DEFAULT_NINJAS: Ninja[] = NINJA_BASES.map((base) =>

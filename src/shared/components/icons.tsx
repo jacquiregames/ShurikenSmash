@@ -46,3 +46,24 @@ export function Close() {
     </svg>
   );
 }
+
+export function MusicOn() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M9 18V5l12-2v13" />
+      <circle cx="6" cy="18" r="3" />
+      <circle cx="18" cy="16" r="3" />
+    </svg>
+  );
+}
+
+export function MusicOff() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M9 18V5l12-2v13" />
+      <circle cx="6" cy="18" r="3" />
+      <circle cx="18" cy="16" r="3" />
+      <path d="M3 3l18 18" />
+    </svg>
+  );
+}
