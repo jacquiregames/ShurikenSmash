@@ -92,7 +92,8 @@ export function PlayerCards({ state, results, actions }: PlayerCardsProps) {
               />
             );
           case "kunai":
-            return null; // Kunai replaces the whole screen
+          case "gauntlet":
+            return null; // Kunai replaces the whole screen; the gauntlet always shows its current game
         }
       })}
     </div>

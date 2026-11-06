@@ -1,8 +1,12 @@
 import type { CSSProperties } from "react";
 import { AVAILABLE_COLORS, COLOR_OPTIONS } from "../shared/config/colors";
-import { getImageUrl, getRewardImageUrl } from "../shared/config/assets";
+import {
+  getBeginButtonUrl,
+  getPlayerCountImageUrl, 
+} from "../shared/config/assets";
 import { PLAYER_COUNTS } from "../shared/config/players";
 import type { GameMode, Ninja, NinjaColor, PlayerCount } from "../shared/game/types";
+import { GAUNTLET_GAMES } from "../modes/gauntlet/logic";
 import { MODES, modeMeta } from "../modes/registry";
 import { TsugitashiToneSelect } from "../modes/tsugitashi/TsugitashiToneSelect";
 
@@ -37,8 +41,23 @@ export function MenuPanel({
             aria-pressed={mode === m.id}
             onClick={() => onSelectMode(m.id)}
           >
-            {m.menuIcon && (
-              <img src={m.menuIcon} alt="" className="tab-btn-icon" draggable={false} />
+            {m.id === "gauntlet" ? (
+              // the gauntlet plays every other game, so its tab shows all of their icons
+              <span className="tab-btn-icons">
+                {GAUNTLET_GAMES.map((g) => (
+                  <img
+                    key={g}
+                    src={modeMeta(g).menuIcon}
+                    alt=""
+                    className="tab-btn-icon"
+                    draggable={false}
+                  />
+                ))}
+              </span>
+            ) : (
+              m.menuIcon && (
+                <img src={m.menuIcon} alt="" className="tab-btn-icon" draggable={false} />
+              )
             )}
             <span className="tab-btn-label">{m.menuLabel}</span>
           </button>
@@ -55,8 +74,7 @@ export function MenuPanel({
                 <li key={line}>{line}</li>
               ))}
             </ol>
-          )}
-          <img src={getRewardImageUrl(numPlayers)} alt="Battle Rewards" className="reward-image" />
+          )} 
         </div>
 
         <div className="menu-player-setup">
@@ -67,15 +85,20 @@ export function MenuPanel({
                 key={n}
                 className={`select-btn ${numPlayers === n ? "selected" : ""}`}
                 aria-pressed={numPlayers === n}
+                aria-label={`${n} ninjas`}
                 onClick={() => onSelectNumPlayers(n)}
               >
-                <span className="select-num">{n}</span>
-                <span className="select-label">Ninjas</span>
+                <img
+                  src={getPlayerCountImageUrl(n)}
+                  alt=""
+                  className="select-img"
+                  draggable={false}
+                />
               </button>
             ))}
           </div>
 
-          {mode === "tsugitashi" && <TsugitashiToneSelect />}
+          {(mode === "tsugitashi" || mode === "gauntlet") && <TsugitashiToneSelect />}
 
           <div className="player-roster">
             {players.map((p) => (
@@ -114,7 +137,7 @@ export function MenuPanel({
       </div>
 
       <button type="button" className="start-btn" onClick={onStartGame} aria-label="Begin Battle">
-        <img src={getImageUrl("begin")} alt="" className="start-btn-img" />
+        <img src={getBeginButtonUrl()} alt="" className="start-btn-img" />
       </button>
     </div>
   );

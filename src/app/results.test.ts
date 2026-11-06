@@ -20,9 +20,9 @@ describe("computeResults (mash)", () => {
 
   it("assigns bonus tiers correctly for 4 players", () => {
     const r = computeResults({ mode: "mash", players, counts: [10, 8, 6, 4], strikeTimes: [] });
-    expect(r.byPlayer[0].bonusImage).toContain("plus100");
-    expect(r.byPlayer[1].bonusImage).toContain("plus50");
-    expect(r.byPlayer[2].bonusImage).toContain("plus10");
+    expect(r.byPlayer[0].bonusImage).toContain("plus200");
+    expect(r.byPlayer[1].bonusImage).toContain("plus100");
+    expect(r.byPlayer[2].bonusImage).toContain("plus50");
     expect(r.byPlayer[3].bonusImage).toContain("plus0");
   });
 
@@ -34,8 +34,8 @@ describe("computeResults (mash)", () => {
       counts: [10, 8, 6],
       strikeTimes: [],
     });
-    expect(r.byPlayer[0].bonusImage).toContain("plus100");
-    expect(r.byPlayer[1].bonusImage).toContain("plus50");
+    expect(r.byPlayer[0].bonusImage).toContain("plus200");
+    expect(r.byPlayer[1].bonusImage).toContain("plus100");
     expect(r.byPlayer[2].bonusImage).toContain("plus0");
   });
 });

@@ -26,6 +26,8 @@ export function useGame() {
       hitDone: (playerId: number, hitId: number) => dispatch({ type: "hit_done", playerId, hitId }),
       burstDone: (playerId: number, burstId: number) =>
         dispatch({ type: "burst_done", playerId, burstId }),
+      kunaiFinished: (ranks: readonly (number | null)[]) =>
+        dispatch({ type: "kunai_finished", ranks }),
     }),
     [],
   );
@@ -33,7 +35,7 @@ export function useGame() {
   const onStackTick = useCallback((at: number) => dispatch({ type: "stack_tick", at }), []);
   const isTsugitashi = state.mode === "tsugitashi";
 
-  useKeyboard(dispatch);
+  useKeyboard(dispatch, state.phase);
   useOutcomePreload(state);
   useRoundTimers(state, dispatch, clock);
   useStackTimer(nextStackDue(state), onStackTick);

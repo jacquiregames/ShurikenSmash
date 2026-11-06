@@ -81,6 +81,20 @@
   transition: transform 0.2s ease;
 }
 
+/* The gauntlet tab: all five game icons in a row above its label. */
+.tab-btn-icons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  pointer-events: none;
+}
+
+.tab-btn-icons .tab-btn-icon {
+  width: 2rem;
+  height: 2rem;
+}
+
 .tab-btn-label {
   line-height: 1.1;
 }
@@ -164,15 +178,21 @@
   width: 100%;
 }
 
+.select-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none; /* clicks land on the button, not the image */
+}
+
 .select-btn {
   cursor: pointer;
   flex: 1;
   max-width: 125px;
-  padding: 0.4rem 0.6rem;
   background: rgba(255, 255, 255, 0.04);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 3px solid rgba(255, 255, 255, 0.2);
   color: #f4eee0;
-  border-radius: 4px;
+  border-radius: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;

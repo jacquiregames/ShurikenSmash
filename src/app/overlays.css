@@ -104,3 +104,67 @@
     transform: scale(1.03);
   }
 }
+
+/* Shown over every screen (including Kunai) after the first Escape of a match. The 1.5s
+   animation matches ESCAPE_CONFIRM_MS in shared/config/timing.ts. */
+.escape-hint {
+  position: fixed;
+  left: 50%;
+  bottom: 4vh;
+  z-index: 100;
+  transform: translateX(-50%);
+  padding: 0.6rem 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #f4eee0;
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  animation: escape-hint 1.5s ease-out forwards;
+}
+
+@keyframes escape-hint {
+  0%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Stands in for the game logo between Ninja Gauntlet games. */
+.next-game {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 2.4vw, 2.6rem);
+  color: #fff;
+  text-shadow:
+    0 0 14px #ff3b4e,
+    2px 2px 0 #000;
+  white-space: pre;
+}
+
+.next-game-num {
+  height: clamp(56px, 9vh, 110px);
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 14px #ff3b4e);
+  animation: next-game-pop 1s cubic-bezier(0.2, 1.6, 0.4, 1) both;
+}
+
+@keyframes next-game-pop {
+  0% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+  25% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

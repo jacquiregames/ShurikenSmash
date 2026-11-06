@@ -5,6 +5,7 @@ import type { StackPlayer } from "../modes/stack/types";
 import { tsugitashiResults } from "../modes/tsugitashi/results";
 import type { RoundResults } from "../shared/game/ranking";
 import type { GameMode, Ninja } from "../shared/game/types";
+import type { GameState } from "./state";
 
 export interface RoundInput {
   mode: GameMode;
@@ -38,6 +39,25 @@ export function computeResults({
     case "tsugitashi":
       return tsugitashiResults(players, target, locked);
     case "kunai":
-      return { winnerIds: new Set(), byPlayer: {} }; // Kunai scores itself
+    case "gauntlet":
+      return { winnerIds: new Set(), byPlayer: {} }; // Kunai scores itself; the gauntlet adds up the rest
   }
+}
+
+/** Scores the round a state just finished. */
+export function resultsFor(
+  state: Pick<
+    GameState,
+    "mode" | "ninjas" | "numPlayers" | "mash" | "blind" | "stack" | "tsugitashi"
+  >,
+): RoundResults {
+  return computeResults({
+    mode: state.mode,
+    players: state.ninjas.slice(0, state.numPlayers),
+    counts: state.mash.counts,
+    strikeTimes: state.blind.strikeTimes,
+    stacks: state.stack.towers,
+    target: state.tsugitashi.target,
+    locked: state.tsugitashi.locked,
+  });
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COUNTDOWN_START, RESULTS_INPUT_LOCK_MS } from "../shared/config/timing";
+import { COUNTDOWN_START, ESCAPE_CONFIRM_MS, RESULTS_INPUT_LOCK_MS } from "../shared/config/timing";
 import { assignColor, DEFAULT_NINJAS } from "../shared/game/ninjas";
 import type { GameMode } from "../shared/game/types";
 import { roundMsFor, usesOutcomeMedia } from "../modes/registry";
@@ -38,6 +38,27 @@ describe("menu keys", () => {
     const s = run(createInitialState(), { type: "key_down", code: "Digit3", at: 0 });
     expect(s.numPlayers).toBe(3);
     expect(run(s, { type: "key_down", code: "Enter", at: 0 }).phase).toBe("countdown");
+  });
+});
+
+describe("play start", () => {
+  it("starts the clock when the first frame is painted, not when play was requested", () => {
+    const s = run(playing("stack", 1000), { type: "play_painted", at: 2500 });
+    expect(s.startedAt).toBe(2500);
+    expect(s.playSynced).toBe(true);
+    const before = playing("stack", 1000).stack.towers[0].nextMoveAt;
+    expect(s.stack.towers[0].nextMoveAt).toBe(before + 1500);
+  });
+
+  it("only syncs once, and only while playing", () => {
+    const s = run(playing("mash", 1000), { type: "play_painted", at: 1200 });
+    expect(run(s, { type: "play_painted", at: 9000 })).toBe(s);
+    const countdown = run(createInitialState(), { type: "start" });
+    expect(run(countdown, { type: "play_painted", at: 5 })).toBe(countdown);
+  });
+
+  it("never moves the start earlier", () => {
+    expect(run(playing("mash", 1000), { type: "play_painted", at: 400 }).startedAt).toBe(1000);
   });
 });
 
@@ -111,8 +132,21 @@ describe("round flow", () => {
     expect(run(playing("mash"), { type: "time_up" }).phase).toBe("video");
   });
 
-  it("Escape aborts to the menu", () => {
-    expect(run(playing(), { type: "key_down", code: "Escape", at: 0 }).phase).toBe("menu");
+  it("Escape needs a second press soon after to abort a match", () => {
+    const esc = (at: number): GameAction => ({ type: "key_down", code: "Escape", at });
+    const armed = run(playing(), esc(0));
+    expect(armed.phase).toBe("playing");
+    expect(armed.escapeArmedAt).toBe(0);
+    expect(run(armed, esc(ESCAPE_CONFIRM_MS)).phase).toBe("menu");
+    // too late: the second press only re-arms
+    const late = run(armed, esc(ESCAPE_CONFIRM_MS + 1));
+    expect(late.phase).toBe("playing");
+    expect(late.escapeArmedAt).toBe(ESCAPE_CONFIRM_MS + 1);
+  });
+
+  it("Escape leaves the results screen straight away", () => {
+    const s: GameState = { ...playing(), phase: "results" };
+    expect(run(s, { type: "key_down", code: "Escape", at: 0 }).phase).toBe("menu");
   });
 });
 
@@ -144,7 +178,9 @@ describe("kunai bullseye", () => {
 
   it("returns to the menu from Escape or the exit action, keeping the chosen mode", () => {
     const s = run(kunaiMenu(), { type: "start" });
-    expect(run(s, { type: "key_down", code: "Escape", at: 0 }).phase).toBe("menu");
+    const armed = run(s, { type: "key_down", code: "Escape", at: 0 });
+    expect(armed.phase).toBe("kunai");
+    expect(run(armed, { type: "key_down", code: "Escape", at: 100 }).phase).toBe("menu");
     const back = run(s, { type: "return_to_menu" });
     expect(back.phase).toBe("menu");
     expect(back.mode).toBe("kunai");
@@ -310,6 +346,26 @@ describe("tsugitashi", () => {
     expect(s.phase).toBe("countdown");
   });
 
+  it("treats losing window focus as everyone letting go: countdown restarts", () => {
+    let s = run(armed(), tick, tick);
+    s = run(s, { type: "release_all", at: 0 });
+    expect(s.tsugitashi.held.some(Boolean)).toBe(false);
+    expect(s.countdown).toBe(COUNTDOWN_START);
+  });
+
+  it("treats losing window focus mid-round as letting go: held buttons lock in", () => {
+    let s = run(playing(1000), up(0, 2000));
+    s = run(s, { type: "release_all", at: 1000 + 3000 });
+    expect(s.tsugitashi.locked[0]).toBe(counterAt(1000));
+    expect(s.tsugitashi.locked[1]).toBe(counterAt(3000));
+    expect(s.phase).toBe("video");
+  });
+
+  it("ignores losing focus in other modes", () => {
+    const mash = run(createInitialState(), { type: "start" });
+    expect(run(mash, { type: "release_all", at: 0 })).toBe(mash);
+  });
+
   it("draws a target in range when play begins", () => {
     for (const random of [0, 0.5, 0.9999]) {
       const { target } = playing(1000, random).tsugitashi;
@@ -346,5 +402,102 @@ describe("tsugitashi", () => {
   it("runs the round until the counter busts", () => {
     const s = playing(1000);
     expect(roundDuration(s)).toBeCloseTo(bustMs(s.tsugitashi.target));
+  });
+});
+
+describe("ninja gauntlet", () => {
+  const tick = (n: number): GameAction[] =>
+    Array.from({ length: n }, () => ({ type: "gauntlet_tick", at: 0 }) as GameAction);
+  const start = () =>
+    run(createInitialState(), { type: "select_mode", mode: "gauntlet" }, { type: "start" });
+
+  /** Plays the current non-kunai game to its results screen (nobody scores). */
+  const finishGame = (s: GameState): GameState => {
+    // Tsugitashi's countdown waits for everyone to hold their button
+    const holds: GameAction[] =
+      s.mode === "tsugitashi"
+        ? ["KeyA", "KeyF", "KeyH", "KeyL"].map((code) => ({ type: "key_down", code, at: 0 }))
+        : [];
+    let t = run(s, ...holds);
+    t = run(t, { type: "countdown_tick" }, { type: "countdown_tick" }, { type: "countdown_tick" });
+    t = run(t, { type: "begin_play", at: 1000 }, { type: "time_up" });
+    if (t.phase === "video") t = run(t, { type: "video_timeout" });
+    return run(t, { type: "show_results", at: 5000 });
+  };
+
+  it("starts with the first game's countdown, not a lobby", () => {
+    const s = start();
+    expect(s.mode).toBe("mash");
+    expect(s.phase).toBe("countdown");
+    expect(s.countdown).toBe(COUNTDOWN_START);
+    expect(s.gauntlet).toMatchObject({ index: 0, nextIn: null });
+  });
+
+  it("counts 5..1 after a game, then starts the next game's 3-2-1 at once", () => {
+    let s = finishGame(start());
+    expect(s.phase).toBe("results");
+    expect(s.gauntlet?.nextIn).toBe(5);
+    expect(s.gauntlet?.ranks).toHaveLength(1);
+    s = run(s, ...tick(4));
+    expect(s.gauntlet?.nextIn).toBe(1);
+    expect(s.mode).toBe("mash");
+    s = run(s, ...tick(1)); // the 1 is not followed by a 0
+    expect(s).toMatchObject({ mode: "blind", phase: "countdown", countdown: COUNTDOWN_START });
+    expect(s.gauntlet).toMatchObject({ index: 1, nextIn: null });
+  });
+
+  it("is not cut short by a mashed confirm key or a single Escape", () => {
+    const s = finishGame(start());
+    const lateEnter = run(s, { type: "key_down", code: "Enter", at: s.resultsShownAt + 5000 });
+    expect(lateEnter.phase).toBe("results");
+    const esc = run(s, { type: "key_down", code: "Escape", at: 0 });
+    expect(esc.phase).toBe("results");
+  });
+
+  it("abandoning it returns to the menu with the gauntlet selected again", () => {
+    const s = run(finishGame(start()), { type: "return_to_menu" });
+    expect(s).toMatchObject({ phase: "menu", mode: "gauntlet", gauntlet: null });
+  });
+
+  it("takes Kunai's finish from the game itself, then moves on to the last game", () => {
+    let s = finishGame(start());
+    s = run(s, ...tick(5));
+    s = finishGame(s);
+    s = run(s, ...tick(5));
+    s = finishGame(s);
+    s = run(s, ...tick(5));
+    expect(s).toMatchObject({ mode: "kunai", phase: "kunai" });
+    s = run(s, { type: "kunai_finished", ranks: [1, 2, 3, 4] });
+    expect(s.gauntlet?.nextIn).toBe(5);
+    expect(s.gauntlet?.ranks[3]).toEqual([1, 2, 3, 4]);
+    s = run(s, { type: "kunai_finished", ranks: [4, 3, 2, 1] }); // reported twice: ignored
+    expect(s.gauntlet?.ranks[3]).toEqual([1, 2, 3, 4]);
+    s = run(s, ...tick(5));
+    expect(s).toMatchObject({ mode: "tsugitashi", phase: "countdown" });
+  });
+
+  it("shows the standings after the fifth game, then goes back to the menu", () => {
+    let s = start();
+    for (const game of ["mash", "blind", "stack", "kunai"]) {
+      expect(s.mode).toBe(game);
+      if (game === "kunai") {
+        s = run(s, { type: "kunai_finished", ranks: [1, 2, 3, 4] });
+      } else {
+        s = finishGame(s);
+      }
+      s = run(s, ...tick(5));
+    }
+    expect(s.mode).toBe("tsugitashi");
+    s = finishGame(s);
+    expect(s.gauntlet?.nextIn).toBe(5);
+    s = run(s, ...tick(5));
+    expect(s).toMatchObject({ phase: "finale", mode: "gauntlet" });
+    expect(s.gauntlet?.ranks).toHaveLength(5);
+    const back = run(s, {
+      type: "key_down",
+      code: "Enter",
+      at: s.resultsShownAt + RESULTS_INPUT_LOCK_MS,
+    });
+    expect(back).toMatchObject({ phase: "menu", mode: "gauntlet", gauntlet: null });
   });
 });

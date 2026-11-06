@@ -1,4 +1,4 @@
-import { COUNTDOWN_START, RESULTS_INPUT_LOCK_MS } from "../shared/config/timing";
+import { COUNTDOWN_START, ESCAPE_CONFIRM_MS, RESULTS_INPUT_LOCK_MS } from "../shared/config/timing";
 import { MAX_PLAYERS } from "../shared/config/players";
 import { filled, replaceAt } from "../shared/game/collections";
 import { addHit, bumpPulse, removeHit, type Hit } from "../shared/game/effects";
@@ -9,6 +9,7 @@ import { initialMashRound, mashStrike } from "../modes/mash/logic";
 import { roundMsFor, usesOutcomeMedia } from "../modes/registry";
 import {
   advanceTowers,
+  delayTowers,
   dropBlock,
   everyoneDone,
   initialStackRound,
@@ -25,7 +26,9 @@ import {
   lockIn,
   setHeld,
 } from "../modes/tsugitashi/logic";
+import { initialGauntlet, isLastGame, recordGame } from "../modes/gauntlet/logic";
 import { bustMs } from "../modes/tsugitashi/tsugitashi";
+import { resultsFor } from "./results";
 import type { GameState } from "./state";
 
 export type { GameState } from "./state";
@@ -39,6 +42,8 @@ export type GameAction =
   /** `random` in [0, 1) picks the Tsugitashi target; it arrives with the action to keep the reducer pure. */
   | { type: "begin_play"; at: number; random?: number }
   | { type: "time_up" }
+  /** The first frame of play reached the screen; the round clock starts from here, not from the state change. */
+  | { type: "play_painted"; at: number }
   | { type: "video_ended"; playerId: number }
   | { type: "video_timeout" }
   | { type: "show_results"; at: number }
@@ -47,7 +52,13 @@ export type GameAction =
   | { type: "burst_done"; playerId: number; burstId: number }
   | { type: "return_to_menu" }
   | { type: "key_down"; code: string; at: number }
-  | { type: "key_up"; code: string; at: number };
+  | { type: "key_up"; code: string; at: number }
+  /** The window lost focus, so any held button will never report its release. */
+  | { type: "release_all"; at: number }
+  /** One second of the Ninja Gauntlet's between-games countdown has passed. */
+  | { type: "gauntlet_tick"; at: number }
+  /** Kunai Bullseye finished its match inside a gauntlet; `ranks` is indexed by seat. */
+  | { type: "kunai_finished"; ranks: readonly (number | null)[] };
 
 const CONFIRM_CODES = new Set(["Enter", "NumpadEnter", "Space"]);
 const PLAYER_COUNT_CODES: Record<string, PlayerCount> = {
@@ -61,10 +72,12 @@ const PLAYER_COUNT_CODES: Record<string, PlayerCount> = {
 function roundState() {
   return {
     startedAt: null,
+    playSynced: false,
     pulses: filled(0),
     hits: Array.from({ length: MAX_PLAYERS }, (): Hit[] => []),
     videosDone: filled(false),
     resultsShownAt: 0,
+    escapeArmedAt: null,
     mash: initialMashRound(),
     blind: initialBlindRound(),
     stack: initialStackRound(),
@@ -78,6 +91,7 @@ export function createInitialState(): GameState {
     mode: "mash",
     numPlayers: 4,
     ninjas: DEFAULT_NINJAS,
+    gauntlet: null,
     countdown: COUNTDOWN_START,
     seq: 0,
     ...roundState(),
@@ -99,7 +113,42 @@ const activePlayers = (state: GameState) => state.ninjas.slice(0, state.numPlaye
 const seatOf = (state: GameState, code: string) =>
   activePlayers(state).find((n) => n.code === code)?.id;
 
+/** Starts the chosen mode; for the gauntlet, that means its first game. */
 function startRound(state: GameState): GameState {
+  if (state.mode !== "gauntlet") return beginGame({ ...state, gauntlet: null });
+  const gauntlet = initialGauntlet();
+  return beginGame({ ...state, gauntlet, mode: gauntlet.games[0] });
+}
+
+/** Back to the menu; a gauntlet in progress is abandoned and its menu tab selected again. */
+function toMenu(state: GameState): GameState {
+  return {
+    ...state,
+    phase: "menu",
+    mode: state.gauntlet ? "gauntlet" : state.mode,
+    gauntlet: null,
+    escapeArmedAt: null,
+  };
+}
+
+/** The gauntlet moves on: straight into the next game's countdown, or to the final standings. */
+function nextGauntletGame(state: GameState, at: number): GameState {
+  const run = state.gauntlet;
+  if (!run) return state;
+  if (isLastGame(run)) {
+    return {
+      ...state,
+      mode: "gauntlet",
+      phase: "finale",
+      resultsShownAt: at,
+      gauntlet: { ...run, nextIn: null },
+    };
+  }
+  const gauntlet = { ...run, index: run.index + 1, nextIn: null };
+  return beginGame({ ...state, gauntlet, mode: gauntlet.games[gauntlet.index] });
+}
+
+function beginGame(state: GameState): GameState {
   // Kunai Bullseye runs its own rounds, countdown and results inside its component.
   if (state.mode === "kunai") return { ...state, ...roundState(), phase: "kunai" };
   return { ...state, ...roundState(), phase: "countdown", countdown: COUNTDOWN_START };
@@ -184,10 +233,40 @@ function release(state: GameState, code: string, at: number): GameState {
   return everyoneLocked(tsugitashi, state.numPlayers) ? endRound(updated) : updated;
 }
 
-function handleKey(state: GameState, code: string, at: number): GameState {
-  if (code === "Escape") {
-    return state.phase === "menu" ? state : { ...state, phase: "menu" };
+/** Tsugitashi: the window lost focus, so every held button counts as released. */
+function releaseAll(state: GameState, at: number): GameState {
+  if (state.mode !== "tsugitashi") return state;
+  if (state.phase === "countdown") {
+    if (!state.tsugitashi.held.some(Boolean)) return state;
+    const tsugitashi = { ...state.tsugitashi, held: filled(false) };
+    return { ...state, tsugitashi, countdown: COUNTDOWN_START };
   }
+  if (state.phase === "playing") {
+    return activePlayers(state).reduce((s, n) => release(s, n.code, at), state);
+  }
+  return state;
+}
+
+/**
+ * Escape leaves the menu-bound screens at once, but mid-match it takes two presses so one
+ * stray key on a shared keyboard can't end everybody's round.
+ */
+function escape(state: GameState, at: number): GameState {
+  if (state.phase === "menu") return state;
+  // Leaving at once is fine once nothing is left to lose; mid-gauntlet there always is.
+  const leaveAtOnce = state.phase === "finale" || (state.phase === "results" && !state.gauntlet);
+  const confirmed =
+    leaveAtOnce || (state.escapeArmedAt !== null && at - state.escapeArmedAt <= ESCAPE_CONFIRM_MS);
+  return confirmed ? toMenu(state) : { ...state, escapeArmedAt: at };
+}
+
+/** Files away how a game of the gauntlet finished and starts the countdown to the next. */
+function recordGauntlet(state: GameState, ranks: readonly (number | null)[]): GameState {
+  return state.gauntlet ? { ...state, gauntlet: recordGame(state.gauntlet, ranks) } : state;
+}
+
+function handleKey(state: GameState, code: string, at: number): GameState {
+  if (code === "Escape") return escape(state, at);
 
   switch (state.phase) {
     case "menu": {
@@ -201,8 +280,11 @@ function handleKey(state: GameState, code: string, at: number): GameState {
       // Tsugitashi buttons only count when they are released.
       return state.mode === "tsugitashi" ? state : strike(state, code, at);
     case "results":
+    case "finale":
+      // Mid-gauntlet the countdown moves things along, so a mashed key must not quit it.
+      if (state.gauntlet && state.phase === "results") return state;
       return CONFIRM_CODES.has(code) && at - state.resultsShownAt >= RESULTS_INPUT_LOCK_MS
-        ? { ...state, phase: "menu" }
+        ? toMenu(state)
         : state;
     default:
       return state;
@@ -243,6 +325,17 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
             : state.tsugitashi,
       };
     }
+    case "play_painted": {
+      if (state.phase !== "playing" || state.startedAt === null || state.playSynced) return state;
+      // Rendering can lag behind the state change; the time it took is not the players' to lose.
+      const lag = Math.max(0, action.at - state.startedAt);
+      return {
+        ...state,
+        playSynced: true,
+        startedAt: state.startedAt + lag,
+        stack: state.mode === "stack" ? delayTowers(state.stack, lag) : state.stack,
+      };
+    }
     case "time_up":
       if (state.phase !== "playing") return state;
       return state.mode === "tsugitashi"
@@ -256,10 +349,16 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
     }
     case "video_timeout":
       return state.phase === "video" ? { ...state, phase: "ended" } : state;
-    case "show_results":
-      return state.phase === "ended"
-        ? { ...state, phase: "results", resultsShownAt: action.at }
-        : state;
+    case "show_results": {
+      if (state.phase !== "ended") return state;
+      const shown: GameState = { ...state, phase: "results", resultsShownAt: action.at };
+      if (!shown.gauntlet) return shown;
+      const { byPlayer } = resultsFor(shown);
+      const ranks = shown.ninjas
+        .slice(0, shown.numPlayers)
+        .map((n) => byPlayer[n.id]?.rank ?? null);
+      return recordGauntlet(shown, ranks);
+    }
     case "hit_done":
       return removeHit(state, action.playerId, action.hitId);
     case "stack_tick": {
@@ -272,11 +371,22 @@ export function gameReducer(state: GameState, action: GameAction): GameState {
       return stack === state.stack ? state : { ...state, stack };
     }
     case "return_to_menu":
-      return state.phase === "results" || state.phase === "kunai"
-        ? { ...state, phase: "menu" }
+      return state.phase === "results" || state.phase === "kunai" || state.phase === "finale"
+        ? toMenu(state)
         : state;
+    case "kunai_finished":
+      return state.phase === "kunai" ? recordGauntlet(state, action.ranks) : state;
+    case "gauntlet_tick": {
+      const run = state.gauntlet;
+      if (!run || run.nextIn === null) return state;
+      return run.nextIn > 1
+        ? { ...state, gauntlet: { ...run, nextIn: run.nextIn - 1 } }
+        : nextGauntletGame(state, action.at);
+    }
     case "key_down":
       return handleKey(state, action.code, action.at);
+    case "release_all":
+      return releaseAll(state, action.at);
     case "key_up":
       if (state.mode !== "tsugitashi") return state;
       if (state.phase === "countdown") return armButton(state, action.code, false);
