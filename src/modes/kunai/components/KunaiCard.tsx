@@ -1,7 +1,7 @@
 import { Fragment, memo, useEffect, useRef, type CSSProperties } from "react";
 import { PlayerCardShell } from "../../../shared/components/PlayerCardShell";
 import { ResultBadge } from "../../../shared/components/ResultBadge";
-import { getImageUrl } from "../../../shared/config/assets";
+import { getKunaiTargetUrl } from "../../../shared/config/assets";
 import type { PlayerResultInfo } from "../../../shared/game/types";
 import { BAR_CM, MATO_D, ROUNDS, TARGET_RINGS, type KunaiPlayer } from "../game/config";
 import type { KunaiPhase, Run } from "../game/engine";
@@ -51,11 +51,15 @@ function useKeycap(code: string) {
     const onUp = (e: KeyboardEvent) => {
       if (e.code === code) padRef.current?.classList.remove("down");
     };
+    // A key-up never arrives if the window loses focus while it is held.
+    const onBlur = () => padRef.current?.classList.remove("down");
     window.addEventListener("keydown", onDown);
     window.addEventListener("keyup", onUp);
+    window.addEventListener("blur", onBlur);
     return () => {
       window.removeEventListener("keydown", onDown);
       window.removeEventListener("keyup", onUp);
+      window.removeEventListener("blur", onBlur);
     };
   }, [code]);
 
@@ -148,7 +152,7 @@ export const KunaiCard = memo(function KunaiCard({
 
               <div className={`kc-mato${landed ? " landed" : ""}${run.bull ? " bull" : ""}`}>
                 <img
-                  src={getImageUrl("kunai-target", "webp")}
+                  src={getKunaiTargetUrl()}
                   alt="Target"
                   className="kc-mato-img"
                   draggable={false}
@@ -242,7 +246,7 @@ export const KunaiCard = memo(function KunaiCard({
                       onPointerUp={release}
                       onPointerLeave={release}
                     >
-                      <span className="pad-key">{player.key}</span>
+                      {player.key}
                     </button>
                   </div>
 

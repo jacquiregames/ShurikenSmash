@@ -1,4 +1,4 @@
-import { getImageUrl } from "../../../shared/config/assets";
+import { getKunaiColorImageUrl } from "../../../shared/config/assets";
 import type { Ninja } from "../../../shared/game/types";
 
 /* ============================================================
@@ -20,7 +20,7 @@ export function buildKunaiPlayers(ninjas: readonly Ninja[]): KunaiPlayer[] {
     id: i,
     label: `P${i + 1}`,
     glow: "rgba(255, 255, 255, 0.4)",
-    bgImage: getImageUrl(`kunai/${n.colorName}`),
+    bgImage: getKunaiColorImageUrl(n.colorName),
   }));
 }
 
@@ -45,22 +45,28 @@ export const REACH = 0.62;
 export const FLIGHT_MS = 520;
 
 /**
- * The painted target, measured off the art (800px across, so a radius of 400px). Rings run
+ * The painted target, measured off the art (1401px across, so a radius of 700px). Rings run
  * from the bullseye outwards: `outer` is the ring's outer edge in px from the centre, and
  * `hi`..`lo` the points it pays from its inner edge to its outer edge. The aim track draws
  * the same rings, so what you see on the track is what you score.
  */
-export const TARGET_RADIUS_PX = 400;
+export const TARGET_RADIUS_PX = 700;
 
 export const TARGET_RINGS = [
-  { zone: "bull", color: "#0046ec", outer: 38, hi: 100, lo: 100 },
-  { zone: "red", color: "#d20000", outer: 91, hi: 99, lo: 90 },
-  { zone: "white", color: "#d4d3d3", outer: 141, hi: 89, lo: 80 },
-  { zone: "blueIn", color: "#003e5c", outer: 189, hi: 79, lo: 70 },
-  { zone: "yellow", color: "#eabf00", outer: 239, hi: 69, lo: 60 },
-  { zone: "blueOut", color: "#003e5c", outer: 291, hi: 59, lo: 50 },
-  { zone: "orange", color: "#d74000", outer: 352, hi: 49, lo: 40 },
-  { zone: "rim", color: "#272827", outer: 400, hi: 29, lo: 10 },
+  { zone: "bull", color: "#0a3a96", outer: 38, hi: 100, lo: 100 },
+  { zone: "red", color: "#d90e1a", outer: 162, hi: 99, lo: 90 },
+  { zone: "green", color: "#1aa240", outer: 254, hi: 89, lo: 80 },
+  { zone: "blueIn", color: "#0c3b75", outer: 352, hi: 79, lo: 70 },
+  { zone: "gold", color: "#d6a346", outer: 452, hi: 69, lo: 60 },
+  { zone: "blueOut", color: "#0b376e", outer: 537, hi: 59, lo: 50 },
+  {
+    zone: "lava",
+    color: "linear-gradient(180deg, #e5500a, #7a1f0c 50%, #e5500a)",
+    outer: 670,
+    hi: 49,
+    lo: 30,
+  },
+  { zone: "rim", color: "#d9ae5e", outer: 700, hi: 29, lo: 20 },
 ] as const;
 
 export type ZoneKey = (typeof TARGET_RINGS)[number]["zone"] | "wood" | "off";

@@ -106,7 +106,7 @@
 .kc-target-score-overlay {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 10%;
   transform: translate(-50%, -50%);
   z-index: 10;
   text-align: center;
@@ -127,7 +127,7 @@
 }
 
 .kc-pts-main {
-  font-family: var(--font-display);
+  font-family: var(--font-name);
   font-size: clamp(2rem, 3.2vw, 3.4rem);
   line-height: 1;
   color: #fff;

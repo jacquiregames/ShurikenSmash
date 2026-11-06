@@ -59,7 +59,6 @@ export interface EngineState {
   runs: Run[];
   history: number[][];
   totals: number[];
-  winners: number[] | null;
   banner: Banner | null;
 }
 
@@ -109,9 +108,9 @@ const freshRun = (): Run => ({
 const freshRuns = (n: number): Run[] => Array.from({ length: n }, freshRun);
 const seats = <T>(n: number, value: T): T[] => Array.from({ length: n }, () => value);
 
-/** Seconds after "3" at which each count beat plays, and when the round goes live. */
-const COUNT_BEATS_MS = [700, 1400, 2100] as const;
-const GO_LIVE_MS = 2560;
+/** Milliseconds after "3" at which "2" and "1" appear; the round goes live as the "1" ends. */
+const COUNT_BEATS_MS = [700, 1400] as const;
+const GO_LIVE_MS = 2100;
 /** Pause after the last kunai lands before the round is scored. */
 const LAST_LAND_MS = 1000;
 const ROUND_BANNER_MS = 2900;
@@ -131,7 +130,6 @@ export function createEngine(
     runs: freshRuns(N),
     history: [],
     totals: seats(N, 0),
-    winners: null,
     banner: null,
   };
   const listeners = new Set<() => void>();
@@ -168,6 +166,16 @@ export function createEngine(
     for (let i = 0; i < N; i++) markerEls[i]?.style.setProperty("--pos", pos[i].toFixed(4));
   };
 
+  /** The fuse is driven straight from here (not React), so every change goes through one place. */
+  const setFuse = (frac: number, text: string, danger = false) => {
+    fuseFillRef.current?.style.setProperty("--f", frac.toFixed(4));
+    if (fuseValRef.current) {
+      fuseValRef.current.textContent = text;
+      fuseValRef.current.classList.toggle("is-danger", danger);
+    }
+    fuseRef.current?.classList.toggle("is-danger", danger);
+  };
+
   const setMarkerEl = (seat: number, el: HTMLElement | null) => {
     markerEls[seat] = el;
     el?.style.setProperty("--pos", pos[seat].toFixed(4));
@@ -188,13 +196,13 @@ export function createEngine(
       dir[i] = i % 2 === 0 ? 1 : -1;
     }
     paint();
+    setFuse(0, "--");
     set({
       phase: "countdown",
       round,
       count: 3,
       runs: freshRuns(N),
       banner: null,
-      winners: null,
     });
 
     sfx.count(3);
@@ -205,7 +213,10 @@ export function createEngine(
         sfx.count(n);
       });
     });
-    after(GO_LIVE_MS, beginLive);
+    after(GO_LIVE_MS, () => {
+      sfx.count(0); // the "go" hit
+      beginLive();
+    });
   }
 
   function beginLive() {
@@ -216,11 +227,13 @@ export function createEngine(
     });
     fuseLeft = ROUND_TIME[state.round - 1];
     lastSec = 99;
+    setFuse(1, fuseLeft.toFixed(1));
   }
 
   function endRound() {
     if (endScheduled) return;
     endScheduled = true;
+    setFuse(0, "--");
 
     const hist = [...state.history, state.runs.map((r) => r.points)];
     const totals = players.map((_, i) => hist.reduce((s, r) => s + (r[i] ?? 0), 0));
@@ -237,16 +250,14 @@ export function createEngine(
     });
 
     if (isLast) {
-      const max = Math.max(...totals);
-      const who = totals.flatMap((t, i) => (t === max ? [i] : []));
-      after(MATCH_BANNER_MS, () => finish(who));
+      after(MATCH_BANNER_MS, finish);
     } else {
       after(ROUND_BANNER_MS, () => beginCountdown(rn + 1));
     }
   }
 
-  function finish(winners: number[]) {
-    set({ phase: "gameOver", banner: null, winners });
+  function finish() {
+    set({ phase: "gameOver", banner: null });
     sfx.victory();
   }
 
@@ -271,19 +282,12 @@ export function createEngine(
       runs: updateRun(seat, { status: "flying", pos: p, cm, points, zone, bull, auto, throwId }),
     });
 
-    after(FLIGHT_MS, () => {
+    after(FLIGHT_MS, () => { 
       landed[seat] = true;
       set({
         runs: updateRun(seat, { status: "landed" }),
       });
       sfx.hit(points, bull);
-
-      if (bull) {
-        set({ banner: { title: "BULLSEYE", gold: true } });
-        after(BULLSEYE_BANNER_MS, () => {
-          if (state.banner?.title === "BULLSEYE") set({ banner: null });
-        });
-      }
 
       if (state.phase === "live" && landed.every(Boolean)) after(LAST_LAND_MS, endRound);
     });
@@ -333,13 +337,7 @@ export function createEngine(
     const total = ROUND_TIME[state.round - 1] ?? 10;
     fuseLeft = Math.max(0, fuseLeft - dt);
     const frac = Math.max(0, Math.min(1, fuseLeft / total));
-    const danger = fuseLeft <= 3.05;
-    fuseFillRef.current?.style.setProperty("--f", frac.toFixed(4));
-    if (fuseValRef.current) {
-      fuseValRef.current.textContent = fuseLeft.toFixed(1);
-      fuseValRef.current.classList.toggle("is-danger", danger);
-    }
-    fuseRef.current?.classList.toggle("is-danger", danger);
+    setFuse(frac, fuseLeft.toFixed(1), fuseLeft <= 3.05);
 
     const sec = Math.ceil(fuseLeft);
     if (sec !== lastSec) {

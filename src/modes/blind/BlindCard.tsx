@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useState } from "react";
 import { PlayerCardShell } from "../../shared/components/PlayerCardShell";
 import { ResultBadge } from "../../shared/components/ResultBadge";
 import { ShurikenZone } from "../../shared/components/ShurikenZone";
@@ -29,24 +29,27 @@ export const BlindCard = memo(function BlindCard({
   onHitDone,
 }: BlindCardProps) {
   const isLocked = lockedTime !== undefined;
+  const hasResult = result !== undefined;
   const [hitVideoDone, setHitVideoDone] = useState(false);
   const [winVideoDone, setWinVideoDone] = useState(false);
 
-  // Reset when a new round starts
-  useEffect(() => {
+  // A new round clears the hit video; leaving the results clears the win video. Resetting
+  // while rendering (rather than in an effect) avoids painting one frame of stale state.
+  const [wasLocked, setWasLocked] = useState(isLocked);
+  if (wasLocked !== isLocked) {
+    setWasLocked(isLocked);
     if (!isLocked) {
       setHitVideoDone(false);
       setWinVideoDone(false);
     }
-  }, [isLocked]);
+  }
+  const [hadResult, setHadResult] = useState(hasResult);
+  if (hadResult !== hasResult) {
+    setHadResult(hasResult);
+    if (!hasResult) setWinVideoDone(false);
+  }
 
-  useEffect(() => {
-    if (!result) {
-      setWinVideoDone(false);
-    }
-  }, [result]);
-
-  const winner = isWinner ?? (result?.rank === 1);
+  const winner = isWinner ?? result?.rank === 1;
 
   // Video playback logic:
   // 1. Hit video: plays when struck during the round until it ends

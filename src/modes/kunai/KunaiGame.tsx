@@ -1,9 +1,19 @@
-import { useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { toggleMuted } from "../../shared/audio/context";
+import { toggleMusic } from "../../shared/audio/music";
 import { useMuted } from "../../shared/audio/useMuted";
+import { useMusicOn } from "../../shared/audio/useMusic";
 import { Backdrop } from "../../shared/components/Backdrop";
-import { Close, Restart, SoundOff, SoundOn } from "../../shared/components/icons";
-import { getImageUrl } from "../../shared/config/assets";
+import {
+  Close,
+  MusicOff,
+  MusicOn,
+  Restart,
+  SoundOff,
+  SoundOn,
+} from "../../shared/components/icons";
+import { getContinueButtonUrl, getCountdownImageUrl } from "../../shared/config/assets";
+import { isActivatableControl } from "../../shared/dom";
 import { competitionRank, placed, type RoundResults } from "../../shared/game/ranking";
 import type { Ninja } from "../../shared/game/types";
 import { KunaiCard } from "./components/KunaiCard";
@@ -17,9 +27,23 @@ interface KunaiGameProps {
   logoSrc: string;
   logoAlt: string;
   onExit: () => void;
+  /** Part of a Ninja Gauntlet: no restart or continue, and the match reports its finish. */
+  inGauntlet?: boolean;
+  /** Called once when the match ends, with where each seat finished (`null`: did not place). */
+  onComplete?: (ranks: readonly (number | null)[]) => void;
+  /** Shown in place of the logo (the gauntlet's "next game starts in" countdown). */
+  logoSlot?: ReactNode;
 }
 
-export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGameProps) {
+export default function KunaiGame({
+  ninjas,
+  logoSrc,
+  logoAlt,
+  onExit,
+  inGauntlet = false,
+  onComplete,
+  logoSlot,
+}: KunaiGameProps) {
   const [players] = useState(() => buildKunaiPlayers(ninjas));
   const codeToPlayer = useMemo(
     () => Object.fromEntries(players.map((p, i) => [p.code, i] as const)) as Record<string, number>,
@@ -30,6 +54,7 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
   const { phase, round, count, runs, history, totals, banner } = state;
   const { press, start, setMarkerEl, fuseRef, fuseFillRef, fuseValRef } = engine;
   const muted = useMuted();
+  const musicOn = useMusicOn();
 
   // Match begins immediately on mount
   useEffect(() => {
@@ -50,11 +75,13 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
       const isConfirm = ev.code === "Space" || ev.code === "Enter" || ev.code === "NumpadEnter";
+      // A focused button handles its own Enter/Space.
+      if (isConfirm && isActivatableControl(ev.target)) return;
       if (isConfirm) ev.preventDefault();
       if (ev.repeat || ev.ctrlKey || ev.metaKey || ev.altKey) return;
 
       if (phase === "gameOver") {
-        if (isConfirm) {
+        if (isConfirm && !inGauntlet) {
           sfx.ui();
           onExit();
         }
@@ -67,14 +94,14 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
         return;
       }
 
-      if (ev.code === "KeyR" && phase !== "live") {
+      if (ev.code === "KeyR" && phase !== "live" && !inGauntlet) {
         sfx.ui();
         start();
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [phase, codeToPlayer, press, start, onExit]);
+  }, [phase, codeToPlayer, press, start, onExit, inGauntlet]);
 
   // Live scoreboard totals & leaders
   const isLive = phase === "live";
@@ -107,6 +134,11 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
     return { winnerIds, byPlayer };
   }, [phase, players, totals]);
 
+  // Tell the gauntlet (once) how the match finished
+  useEffect(() => {
+    if (results) onComplete?.(players.map((p) => results.byPlayer[p.id].rank));
+  }, [results, players, onComplete]);
+
   return (
     <div className={`game phase-${phase} kb-root`}>
       <Backdrop vignette />
@@ -114,7 +146,9 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
       {/* Global Top Bar: Logo (left), Burning Fuse & Round Indicator (center), Mute & Actions (right) */}
       <header className="title-bar kc-topbar">
         <div className="title-bar-left">
-          <img className="header-logo" src={logoSrc} alt={logoAlt} draggable={false} />
+          {logoSlot ?? (
+            <img className="header-logo" src={logoSrc} alt={logoAlt} draggable={false} />
+          )}
         </div>
 
         <div className="title-bar-center kc-topmid">
@@ -140,17 +174,28 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
             <span className="fuse-icon">🧨</span>
             <div className="fuse" ref={fuseRef}>
               <div className="rope-texture" />
-              <div className="fill" ref={fuseFillRef} style={{ ["--f" as string]: isLive ? 1 : 0 }}>
+              {/* The engine owns the fuse from here on; these are only its starting values. */}
+              <div className="fill" ref={fuseFillRef} style={{ "--f": 0 } as CSSProperties}>
                 <span className="spark-head" />
               </div>
             </div>
             <span className="val" ref={fuseValRef}>
-              {isLive ? "0.0" : "--"}
+              --
             </span>
           </div>
         </div>
 
         <div className="kc-topright">
+          <button
+            type="button"
+            className={`icon-btn${musicOn ? "" : " off"}`}
+            onClick={toggleMusic}
+            title={musicOn ? "Turn Music Off" : "Turn Music On"}
+            aria-label={musicOn ? "Turn Music Off" : "Turn Music On"}
+            aria-pressed={!musicOn}
+          >
+            {musicOn ? <MusicOn /> : <MusicOff />}
+          </button>
           <button
             type="button"
             className={`icon-btn${muted ? " off" : ""}`}
@@ -160,20 +205,22 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
           >
             {muted ? <SoundOff /> : <SoundOn />}
           </button>
-          <button
-            type="button"
-            className="icon-btn"
-            onClick={restart}
-            title="Restart Match (R)"
-            aria-label="Restart Match"
-          >
-            <Restart />
-          </button>
+          {!inGauntlet && (
+            <button
+              type="button"
+              className="icon-btn"
+              onClick={restart}
+              title="Restart Match (R)"
+              aria-label="Restart Match"
+            >
+              <Restart />
+            </button>
+          )}
           <button
             type="button"
             className="icon-btn"
             onClick={onExit}
-            title="Back to Menu (Esc)"
+            title="Back to Menu (Esc twice)"
             aria-label="Back to Menu"
           >
             <Close />
@@ -201,21 +248,15 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
       </div>
 
       {/* Global Countdown Overlay with Images */}
-      {phase === "countdown" && (
+      {phase === "countdown" && count > 0 && (
         <div className="countdown-overlay" aria-live="assertive">
-          {count > 0 ? (
-            <img
-              key={count}
-              src={getImageUrl(String(count), "png")}
-              alt={String(count)}
-              className="countdown-img"
-              draggable={false}
-            />
-          ) : (
-            <div className="countdown-num" key="throw">
-              THROW!
-            </div>
-          )}
+          <img
+            key={count}
+            src={getCountdownImageUrl(count)}
+            alt={String(count)}
+            className="countdown-img"
+            draggable={false}
+          />
         </div>
       )}
 
@@ -240,7 +281,7 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
       )}
 
       {/* Game Over Action Bar with Continue Button Below Player Cards */}
-      {phase === "gameOver" && (
+      {phase === "gameOver" && !inGauntlet && (
         <div className="results-action-bar">
           <div className="results-buttons">
             <button
@@ -249,7 +290,7 @@ export default function KunaiGame({ ninjas, logoSrc, logoAlt, onExit }: KunaiGam
               onClick={onExit}
               aria-label="Return to Dojo"
             >
-              <img src={getImageUrl("continue")} alt="" className="ghost-btn-img" />
+              <img src={getContinueButtonUrl()} alt="" className="ghost-btn-img" />
             </button>
           </div>
         </div>

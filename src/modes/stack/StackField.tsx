@@ -1,4 +1,5 @@
 import { memo, useEffect, useRef, type CSSProperties } from "react";
+import { preloadImages } from "../../shared/preload";
 import { getRowImageUrl } from "./assets";
 import { STACK_COLS, STACK_ROWS } from "./stack";
 import type { Row, StackPlayer } from "./types";
@@ -13,9 +14,7 @@ interface StackFieldProps {
 }
 
 /** Warm the cache so a block never shows up without its art. */
-for (const width of [1, 2, 3]) {
-  new Image().src = getRowImageUrl(width);
-}
+preloadImages([1, 2, 3].map(getRowImageUrl));
 
 /** Positions a block as percentages so the field scales with its container. */
 const blockStyle = ({ x, width }: Row, level: number): CSSProperties =>

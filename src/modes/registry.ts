@@ -1,6 +1,7 @@
 import type { ModeMeta } from "../shared/game/mode";
 import type { GameMode } from "../shared/game/types";
 import { blindMeta } from "./blind/meta";
+import { gauntletMeta } from "./gauntlet/meta";
 import { kunaiMeta } from "./kunai/meta";
 import { mashMeta } from "./mash/meta";
 import { stackMeta } from "./stack/meta";
@@ -10,9 +11,10 @@ import { tsugitashiMeta } from "./tsugitashi/meta";
 export const MODE_BY_ID = {
   mash: mashMeta,
   blind: blindMeta,
+  tsugitashi: tsugitashiMeta,
   stack: stackMeta,
   kunai: kunaiMeta,
-  tsugitashi: tsugitashiMeta,
+  gauntlet: gauntletMeta,
 } satisfies Record<GameMode, ModeMeta>;
 
 /** Menu order. */

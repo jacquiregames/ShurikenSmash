@@ -26,6 +26,10 @@ export const startTowers = (round: StackRound, at: number): StackRound => ({
   towers: round.towers.map((p) => ({ ...p, nextMoveAt: at + speedForRows(0) })),
 });
 
+/** Pushes every tower's next move back by `ms`, keeping their rhythm. */
+export const delayTowers = (round: StackRound, ms: number): StackRound =>
+  ms === 0 ? round : { towers: round.towers.map((p) => ({ ...p, nextMoveAt: p.nextMoveAt + ms })) };
+
 /**
  * Locks the climbing block of `seat` onto its tower (or topples the tower).
  * `burstId` must be unique; returns the same round if that tower is not climbing.

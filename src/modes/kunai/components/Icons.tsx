@@ -10,7 +10,8 @@ export function Kunai({
   className?: string;
   tassel?: boolean;
 }) {
-  const id = useId().replace(/:/g, "");
+  // React ids contain characters (":", "«", "_") that are awkward inside url(#…).
+  const id = useId().replace(/[^\w-]/g, "");
   return (
     <svg
       viewBox="0 0 120 32"
@@ -91,7 +92,7 @@ export function Kunai({
 
         {/* Optional trailing tassel ribbons for embedded kunai */}
         {tassel && (
-          <g className="kunai-tassel" opacity="0.85">
+          <g opacity="0.85">
             <path
               d="M98 16 Q106 14 114 20 Q122 26 128 22"
               fill="none"

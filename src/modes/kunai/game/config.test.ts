@@ -37,13 +37,13 @@ describe("kunai scoring", () => {
 
   it("maps distance to the painted rings", () => {
     expect(zoneFor(0)).toBe("bull");
-    expect(zoneFor(dAt(60))).toBe("red");
-    expect(zoneFor(dAt(120))).toBe("white");
-    expect(zoneFor(dAt(160))).toBe("blueIn");
-    expect(zoneFor(dAt(220))).toBe("yellow");
-    expect(zoneFor(dAt(260))).toBe("blueOut");
-    expect(zoneFor(dAt(320))).toBe("orange");
-    expect(zoneFor(MATO_D)).toBe("rim");
+    expect(zoneFor(dAt(100))).toBe("red");
+    expect(zoneFor(dAt(200))).toBe("green");
+    expect(zoneFor(dAt(300))).toBe("blueIn");
+    expect(zoneFor(dAt(400))).toBe("gold");
+    expect(zoneFor(dAt(500))).toBe("blueOut");
+    expect(zoneFor(dAt(600))).toBe("lava");
+    expect(zoneFor(dAt(685))).toBe("rim");
     expect(zoneFor(0.5)).toBe("wood");
     expect(zoneFor(REACH)).toBe("off");
   });
